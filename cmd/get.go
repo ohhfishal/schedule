@@ -14,8 +14,8 @@ const DAY = 24 * time.Hour
 var TIME_FORMAT = "15:04"
 
 type Get struct {
-	Date   time.Time `arg:"" optional:"" format:"2006-01-02" help:"Date to get (Default=today)"`
-	Format string    `enum:"markdown,raw" default:"markdown" help:"Output format (markdown,raw)"`
+	Date time.Time `arg:"" optional:"" format:"2006-01-02" help:"Date to get (Default=today)"`
+	Out  string    `enum:"markdown,raw" short:"o" default:"markdown" help:"Output format (markdown,raw)"`
 }
 
 func Midnight(now time.Time) time.Time {
@@ -64,7 +64,7 @@ func (cmd Get) Run(ctx context.Context, stdout io.Writer, queries *db.Queries, n
 		fmt.Fprintln(stdout, `No events for today :(`)
 		return nil
 	}
-	switch cmd.Format {
+	switch cmd.Out {
 	case `raw`:
 		fmt.Fprintln(stdout, today)
 		for _, event := range events {
@@ -76,7 +76,7 @@ func (cmd Get) Run(ctx context.Context, stdout io.Writer, queries *db.Queries, n
 			fmt.Fprintln(stdout, Markdown(event))
 		}
 	default:
-		return fmt.Errorf("unknown format: %s", cmd.Format)
+		return fmt.Errorf("unknown format: %s", cmd.Out)
 	}
 	return nil
 }
