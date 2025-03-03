@@ -1,7 +1,7 @@
 package sql
 
 import (
-  _ "embed"
+	_ "embed"
 )
 
 //go:embed schema.sql
