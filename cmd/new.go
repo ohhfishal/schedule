@@ -11,9 +11,9 @@ import (
 
 type New struct {
 	Name        string    `arg:"" help:"Name of event."`
-	Description string    `default:"" help:"Description for event."`
 	StartDate   time.Time `arg:"" format:"2006-01-02" help:"Date event starts."`
 	StartTime   time.Time `arg:"" optional:"" format:"15:04" help:"Time event starts."`
+	Description string    `short:"d" default:"" help:"Description for event."`
 }
 
 func (cmd New) Run(ctx context.Context, stdout io.Writer, queries *db.Queries, now func() time.Time) error {
