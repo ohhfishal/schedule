@@ -22,8 +22,13 @@ func Midnight(now time.Time) time.Time {
 	return time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
 }
 
+func Normalize(s, now time.Time) time.Time {
+	return time.Date(s.Year(), s.Month(), s.Day(), s.Hour(), s.Minute(), int(0), int(0), now.Location())
+}
+
 func Markdown(e db.Event) string {
 	var description string
+	// TODO: Location coming from user preference would be nice
 	timeStr := Normalize(time.Unix(e.StartTime, 0), time.Now()).Format(TIME_FORMAT)
 	if e.EndTime.Valid && e.EndTime.Int64 != 0 {
 		timeStr += "-" + Normalize(time.Unix(e.EndTime.Int64, 0), time.Now()).Format(TIME_FORMAT)

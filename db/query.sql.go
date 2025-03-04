@@ -40,8 +40,6 @@ func (q *Queries) CreateEvent(ctx context.Context, arg CreateEventParams) (Event
 }
 
 const deleteEvent = `-- name: DeleteEvent :exec
-;
-
 DELETE FROM events
 WHERE id = ?
 `
@@ -105,7 +103,8 @@ func (q *Queries) GetEvent(ctx context.Context, id int64) (Event, error) {
 
 const getEvents = `-- name: GetEvents :many
 SELECT id, name, description, start_time, end_time FROM events
-WHERE ?1 < start_time AND start_time < ?2
+WHERE ?1 <= start_time AND start_time <= ?2
+ORDER BY start_time
 `
 
 type GetEventsParams struct {

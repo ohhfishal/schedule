@@ -24,7 +24,8 @@ ORDER BY id;
 
 -- name: GetEvents :many
 SELECT * FROM events
-WHERE sqlc.arg('start') < start_time AND start_time < sqlc.arg('end') ;
+WHERE sqlc.arg('start') <= start_time AND start_time <= sqlc.arg('end')
+ORDER BY start_time;
 
 -- name: DeleteEvent :exec
 DELETE FROM events

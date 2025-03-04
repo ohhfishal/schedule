@@ -3,28 +3,33 @@ package cmd
 import (
 	"context"
 	"fmt"
-	"github.com/ohhfishal/schedule/db"
+	"io"
 	"time"
+
+	"github.com/ohhfishal/schedule/db"
 )
 
 type New struct {
 	Name        string    `arg:"" help:"Name of event."`
 	Description string    `default:"" help:"Description for event."`
-	StartTime   time.Time `arg:"" format:"2006-01-02 15:04" help:"Time event starts."`
+	StartDate   time.Time `arg:"" format:"2006-01-02" help:"Date event starts."`
+	StartTime   time.Time `arg:"" optional:"" format:"15:04" help:"Time event starts."`
 }
 
-func Normalize(s, now time.Time) time.Time {
-	return time.Date(s.Year(), s.Month(), s.Day(), s.Hour(), s.Minute(), int(0), int(0), now.Location())
-
-}
-
-func (cmd New) Run(ctx context.Context, queries *db.Queries, now func() time.Time) error {
-
+func (cmd New) Run(ctx context.Context, stdout io.Writer, queries *db.Queries, now func() time.Time) error {
+	date := cmd.StartDate
+	var start time.Time
+	if cmd.StartTime.IsZero() {
+		start = time.Date(date.Year(), date.Month(), date.Day(), 0, 0, 0, 0, now().Location())
+	} else {
+		t := cmd.StartTime
+		start = time.Date(date.Year(), date.Month(), date.Day(), t.Hour(), t.Minute(), 0, 0, now().Location())
+	}
 	event, err := queries.CreateEvent(ctx, db.CreateEventParams{
 		Name:        cmd.Name,
 		Description: cmd.Description,
-		StartTime:   Normalize(cmd.StartTime, now()).Unix(),
+		StartTime:   start.Unix(),
 	})
-	fmt.Println(event)
+	fmt.Fprintf(stdout, "%+v\n", event)
 	return err
 }
