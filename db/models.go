@@ -4,14 +4,10 @@
 
 package db
 
-import (
-	"database/sql"
-)
-
 type Event struct {
-	ID          int64         `json:"id"`
-	Name        string        `json:"name"`
-	Description string        `json:"description"`
-	StartTime   int64         `json:"start_time"`
-	EndTime     sql.NullInt64 `json:"end_time"`
+	ID          int64  `json:"id"`
+	Name        string `json:"name"`
+	Description string `json:"description"`
+	StartTime   int64  `json:"start_time"`
+	EndTime     int64  `json:"end_time"`
 }
