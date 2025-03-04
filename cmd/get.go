@@ -14,7 +14,8 @@ const DAY = 24 * time.Hour
 var TIME_FORMAT = "15:04"
 
 type Get struct {
-	Date time.Time `arg:"" optional:"" format:"2006-01-02" help:"Date to get (Default=today)"`
+	All  bool      `short:"a" xor:"filter"`
+	Date time.Time `short:"d" xor:"filter" format:"2006-01-02" help:"Date to get (Default=today)"`
 	Out  string    `enum:"markdown,raw" short:"o" default:"markdown" help:"Output format (markdown,raw)"`
 }
 
@@ -46,7 +47,6 @@ func (cmd Get) Run(ctx context.Context, stdout io.Writer, queries *db.Queries, n
 	}
 
 	var today time.Time
-
 	if !cmd.Date.IsZero() {
 		today = Midnight(cmd.Date)
 	} else {
@@ -56,10 +56,16 @@ func (cmd Get) Run(ctx context.Context, stdout io.Writer, queries *db.Queries, n
 		today = Midnight(now())
 	}
 
-	events, err := queries.GetEvents(ctx, db.GetEventsParams{
-		Start: today.Unix(),
-		End:   today.Add(DAY).Unix(),
-	})
+	var events []db.Event
+	var err error
+	if cmd.All {
+		events, err = queries.GetAllEvents(ctx)
+	} else {
+		events, err = queries.GetEvents(ctx, db.GetEventsParams{
+			Start: today.Unix(),
+			End:   today.Add(DAY).Unix(),
+		})
+	}
 
 	if err != nil {
 		return fmt.Errorf(`getting events: %w`, err)
