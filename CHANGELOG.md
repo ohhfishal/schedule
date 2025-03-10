@@ -1,0 +1,16 @@
+
+# Change Log
+ 
+## [Upcoming]
+
+## [v0.1.0] 2025-XX-XX
+
+### Added
+- `edit` command stub (Not Implemented)
+- `delete` command MVP
+- `get` command MVP
+- `new` command MVP
+
+ 
+[upcoming]: https://github.com/ohhfishal/schedule/compare/v0.1.0...HEAD
+[v0.1.0]: https://github.com/ohhfishal/schedule/releases/tag/v0.1.0
