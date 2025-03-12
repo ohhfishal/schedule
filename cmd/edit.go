@@ -3,7 +3,6 @@ package cmd
 import (
 	"context"
 	"errors"
-	"io"
 	"time"
 
 	"github.com/ohhfishal/schedule/db"
@@ -16,7 +15,7 @@ type Edit struct {
 	Description string    `short:"d" default:"" help:"Description for event."`
 }
 
-func (cmd Edit) Run(ctx context.Context, stdout io.Writer, queries *db.Queries, now func() time.Time) error {
+func (cmd Edit) Run(ctx context.Context, stdout Stdout, queries *db.Queries, now func() time.Time) error {
 	// TODO: Implement. Requires editing the SQL
 	// event, err := queries.CreateEvent(ctx, db.CreateEventParams{
 	// 	Name:        cmd.Name,

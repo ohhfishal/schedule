@@ -3,7 +3,6 @@ package cmd
 import (
 	"context"
 	"fmt"
-	"io"
 	"time"
 
 	"github.com/ohhfishal/schedule/db"
@@ -41,7 +40,7 @@ func Markdown(e db.Event) string {
 	return fmt.Sprintf("- %s - %s%s", timeStr, e.Name, description)
 }
 
-func (cmd Get) Run(ctx context.Context, stdout io.Writer, queries *db.Queries, now func() time.Time) error {
+func (cmd Get) Run(ctx context.Context, stdout Stdout, queries *db.Queries, now func() time.Time) error {
 	if stdout == nil {
 		return fmt.Errorf("no stdout")
 	}

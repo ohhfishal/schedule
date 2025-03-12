@@ -3,7 +3,6 @@ package cmd
 import (
 	"context"
 	"fmt"
-	"io"
 	"time"
 
 	"github.com/ohhfishal/schedule/db"
@@ -16,7 +15,7 @@ type New struct {
 	Description string    `short:"d" default:"" help:"Description for event."`
 }
 
-func (cmd New) Run(ctx context.Context, stdout io.Writer, queries *db.Queries, now func() time.Time) error {
+func (cmd New) Run(ctx context.Context, stdout Stdout, queries *db.Queries, now func() time.Time) error {
 	date := cmd.StartDate
 	var start time.Time
 	if cmd.StartTime.IsZero() {
