@@ -6,7 +6,7 @@
 ## [v0.1.0] 2025-XX-XX
 
 ### Added
-- `edit` command stub (Not Implemented)
+- `edit` command stub
 - `delete` command MVP
 - `get` command MVP
 - `new` command MVP

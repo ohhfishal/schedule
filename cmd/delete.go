@@ -2,15 +2,21 @@ package cmd
 
 import (
 	"context"
-	"time"
+	"fmt"
 
 	"github.com/ohhfishal/schedule/db"
 )
 
 type Delete struct {
-	ID int64 `arg:"" required:"" help:"ID of event to delete."`
+	ID []int64 `arg:"" required:"" help:"ID of event to delete."`
 }
 
-func (cmd Delete) Run(ctx context.Context, queries *db.Queries, now func() time.Time) error {
-	return queries.DeleteEvent(ctx, cmd.ID)
+func (cmd Delete) Run(ctx context.Context, queries *db.Queries) error {
+	for _, id := range cmd.ID {
+		err := queries.DeleteEvent(ctx, id)
+		if err != nil {
+			return fmt.Errorf(`deleting: %d: %w`, id, err)
+		}
+	}
+	return nil
 }
