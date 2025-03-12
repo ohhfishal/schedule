@@ -53,7 +53,6 @@ func Run(ctx context.Context, stdout io.Writer, args []string) error {
 		&root,
 		kong.Bind(time.Now),
 		kong.BindTo(ctx, new(context.Context)),
-		kong.BindTo(stdout, new(io.Writer)),
 		kong.BindTo(stdoutWriter, new(Stdout)),
 	)
 	if err != nil {
