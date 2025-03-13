@@ -13,9 +13,10 @@ const DAY = 24 * time.Hour
 var TIME_FORMAT = "15:04"
 
 type Get struct {
-	All  bool      `short:"a" xor:"filter" help:"Print all events (Enables -o raw)"`
-	Date time.Time `short:"d" xor:"filter" format:"2006-01-02" help:"Date to get (Default=today)"`
-	Out  string    `enum:"markdown,raw" short:"o" default:"markdown" help:"Output format (markdown,raw)"`
+	// TODO: Make this its own command
+	All  bool      `short:"a" help:"Print all events (Enables -o raw)"`
+	Date time.Time `arg:"" optional:"" format:"2006-01-02" help:"Date to get (Default=today)"`
+	Out  string    `short:"o" enum:"markdown,raw" default:"markdown" help:"Output format (markdown,raw)"`
 }
 
 func Midnight(now time.Time) time.Time {
@@ -76,6 +77,7 @@ func (cmd Get) Run(ctx context.Context, stdout Stdout, queries *db.Queries, now 
 		fmt.Fprintln(stdout, `No events for today :(`)
 		return nil
 	}
+
 	switch cmd.Out {
 	case `raw`:
 		fmt.Fprintln(stdout, today)
