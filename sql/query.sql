@@ -10,8 +10,12 @@ RETURNING *;
 
 -- name: UpdateEvent :one
 UPDATE events
-set name = ?
-WHERE id = ?
+  SET 
+    name = coalesce(sqlc.narg('name'), name),
+    description = coalesce(sqlc.narg('description'), description),
+    start_time = coalesce(sqlc.narg('start_time'), start_time),
+    end_time = coalesce(sqlc.narg('end_time'), end_time)
+WHERE id = sqlc.arg('id')
 RETURNING *;
 
 -- name: GetEvent :one

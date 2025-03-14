@@ -7,6 +7,7 @@ package db
 
 import (
 	"context"
+	"database/sql"
 )
 
 const createEvent = `-- name: CreateEvent :one
@@ -143,18 +144,31 @@ func (q *Queries) GetEvents(ctx context.Context, arg GetEventsParams) ([]Event, 
 
 const updateEvent = `-- name: UpdateEvent :one
 UPDATE events
-set name = ?
-WHERE id = ?
+  SET 
+    name = coalesce(?1, name),
+    description = coalesce(?2, description),
+    start_time = coalesce(?3, start_time),
+    end_time = coalesce(?4, end_time)
+WHERE id = ?5
 RETURNING id, name, description, start_time, end_time
 `
 
 type UpdateEventParams struct {
-	Name string `json:"name"`
-	ID   int64  `json:"id"`
+	Name        sql.NullString `json:"name"`
+	Description sql.NullString `json:"description"`
+	StartTime   sql.NullInt64  `json:"start_time"`
+	EndTime     sql.NullInt64  `json:"end_time"`
+	ID          int64          `json:"id"`
 }
 
 func (q *Queries) UpdateEvent(ctx context.Context, arg UpdateEventParams) (Event, error) {
-	row := q.db.QueryRowContext(ctx, updateEvent, arg.Name, arg.ID)
+	row := q.db.QueryRowContext(ctx, updateEvent,
+		arg.Name,
+		arg.Description,
+		arg.StartTime,
+		arg.EndTime,
+		arg.ID,
+	)
 	var i Event
 	err := row.Scan(
 		&i.ID,

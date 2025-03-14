@@ -19,7 +19,7 @@ type Root struct {
 	New        New    `cmd:"" help:"Create a new event."`
 	Get        Get    `cmd:"" help:"Get events"`
 	Delete     Delete `cmd:"" help:"Delete events by ID"`
-	Edit       Edit   `cmd:"" help:"Edit an event by ID (NOT IMPLEMENTED)"`
+	Edit       Edit   `cmd:"" help:"Edit an event by ID"`
 }
 
 type Stdout interface {
