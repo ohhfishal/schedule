@@ -31,6 +31,6 @@ SELECT * FROM events
 WHERE sqlc.arg('start') <= start_time AND start_time <= sqlc.arg('end')
 ORDER BY start_time;
 
--- name: DeleteEvent :exec
+-- name: DeleteEvent :execresult
 DELETE FROM events
 WHERE id = ?;

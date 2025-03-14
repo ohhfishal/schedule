@@ -2,10 +2,11 @@ package db_test
 
 import (
 	"fmt"
-	assert "github.com/alecthomas/assert/v2"
-	"github.com/ohhfishal/schedule/db"
 	"testing"
 	"time"
+
+	assert "github.com/alecthomas/assert/v2"
+	"github.com/ohhfishal/schedule/db"
 )
 
 func New(t *testing.T) *db.Queries {
@@ -24,7 +25,7 @@ func TestRegression(t *testing.T) {
 		event, err := q.CreateEvent(t.Context(), input)
 		assert.Equal(t, err, nil)
 
-		err = q.DeleteEvent(t.Context(), event.ID)
+		_, err = q.DeleteEvent(t.Context(), event.ID)
 		assert.Equal(t, err, nil)
 	}
 }

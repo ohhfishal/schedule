@@ -26,26 +26,28 @@ type Stdout interface {
 	io.Writer
 	Verbose() io.Writer
 }
-type stdoutWriter struct {
-	stdout  io.Writer
-	verbose io.Writer
-	builder strings.Builder
+type StdoutWriter struct {
+	Stdout        io.Writer
+	VerboseWriter io.Writer
 }
 
-func (sw *stdoutWriter) Write(p []byte) (n int, err error) {
-	return sw.stdout.Write(p)
-}
-
-func (sw *stdoutWriter) Verbose() io.Writer {
-	if sw.verbose != nil {
-		return sw.verbose
+func (sw *StdoutWriter) Write(p []byte) (n int, err error) {
+	if sw.Stdout == nil {
+		return len(p), nil
 	}
-	return &sw.builder
+	return sw.Stdout.Write(p)
+}
+
+func (sw *StdoutWriter) Verbose() io.Writer {
+	if sw.VerboseWriter != nil {
+		return sw.VerboseWriter
+	}
+	return &strings.Builder{}
 }
 
 func Run(ctx context.Context, stdout io.Writer, args []string) error {
-	stdoutWriter := &stdoutWriter{
-		stdout: stdout,
+	stdoutWriter := &StdoutWriter{
+		Stdout: stdout,
 	}
 
 	var root Root
@@ -67,7 +69,7 @@ func Run(ctx context.Context, stdout io.Writer, args []string) error {
 	}
 
 	if root.Verbose {
-		stdoutWriter.verbose = stdout
+		stdoutWriter.VerboseWriter = stdout
 	}
 
 	queries, err := db.Connect(ctx, root.Driver, root.DataSource)

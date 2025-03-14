@@ -2,6 +2,8 @@
 # Change Log
  
 ## [Upcoming]
+### Added
+- `edit` command MVP
 
 ## [v0.1.0] 2025-03-14
 
