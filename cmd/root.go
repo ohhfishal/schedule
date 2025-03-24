@@ -5,7 +5,6 @@ import (
 	_ "embed"
 	"fmt"
 	"io"
-	"strings"
 	"time"
 
 	"github.com/alecthomas/kong"
@@ -22,40 +21,14 @@ type Root struct {
 	Edit       Edit   `cmd:"" help:"Edit an event by ID"`
 }
 
-type Stdout interface {
-	io.Writer
-	Verbose() io.Writer
-}
-type StdoutWriter struct {
-	Stdout        io.Writer
-	VerboseWriter io.Writer
-}
-
-func (sw *StdoutWriter) Write(p []byte) (n int, err error) {
-	if sw.Stdout == nil {
-		return len(p), nil
-	}
-	return sw.Stdout.Write(p)
-}
-
-func (sw *StdoutWriter) Verbose() io.Writer {
-	if sw.VerboseWriter != nil {
-		return sw.VerboseWriter
-	}
-	return &strings.Builder{}
-}
-
 func Run(ctx context.Context, stdout io.Writer, args []string) error {
-	stdoutWriter := &StdoutWriter{
-		Stdout: stdout,
-	}
-
 	var root Root
 	parser, err := kong.New(
 		&root,
 		kong.Bind(time.Now),
 		kong.BindTo(ctx, new(context.Context)),
-		kong.BindTo(stdoutWriter, new(Stdout)),
+		kong.Bind(time.Now().Location()),
+		kong.BindTo(stdout, new(io.Writer)),
 	)
 	if err != nil {
 		return err
@@ -67,17 +40,14 @@ func Run(ctx context.Context, stdout io.Writer, args []string) error {
 	if err != nil {
 		return fmt.Errorf(`parsing args: %w`, err)
 	}
-
-	if root.Verbose {
-		stdoutWriter.VerboseWriter = stdout
-	}
+	parsed.Bind(root.Verbose)
 
 	queries, err := db.Connect(ctx, root.Driver, root.DataSource)
 	if err != nil {
 		return err
 	}
 
-	if err := parsed.Run(ctx, stdoutWriter, queries); err != nil {
+	if err := parsed.Run(ctx, queries); err != nil {
 		return err
 	}
 	return nil

@@ -59,7 +59,7 @@ func TestDelete(t *testing.T) {
 		assert.Error(t, err)
 	})
 	t.Run("ID found", func(t *testing.T) {
-		stdout := cmd.StdoutWriter{}
+		stdout := strings.Builder{}
 		q := Query(t)
 
 		// Add some test events
@@ -67,12 +67,12 @@ func TestDelete(t *testing.T) {
 			err := cmd.New{
 				Name:      "Test Event",
 				StartDate: time.Now(),
-			}.Run(t.Context(), &stdout, q, time.Now)
+			}.Run(t.Context(), &stdout, q, time.Now().Location())
 			assert.NoError(t, err)
 		}
 
 		// Delete them all
-		err := cmd.Delete{ID: []int64{1, 2, 3, 4, 5}}.Run(t.Context(), &stdout, q)
+		err := cmd.Delete{ID: []int64{1, 2, 3, 4, 5}}.Run(t.Context(), &stdout, false, q)
 		assert.NoError(t, err)
 
 		// Confirm no events are left

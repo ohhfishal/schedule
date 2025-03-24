@@ -3,6 +3,7 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"io"
 	"time"
 
 	"github.com/ohhfishal/schedule/db"
@@ -15,14 +16,14 @@ type New struct {
 	Description string    `short:"d" default:"" help:"Description for event."`
 }
 
-func (cmd New) Run(ctx context.Context, stdout Stdout, queries *db.Queries, now func() time.Time) error {
+func (cmd New) Run(ctx context.Context, stdout io.Writer, queries *db.Queries, location *time.Location) error {
 	date := cmd.StartDate
 	var start time.Time
 	if cmd.StartTime.IsZero() {
-		start = time.Date(date.Year(), date.Month(), date.Day(), 0, 0, 0, 0, now().Location())
+		start = time.Date(date.Year(), date.Month(), date.Day(), 0, 0, 0, 0, location)
 	} else {
 		t := cmd.StartTime
-		start = time.Date(date.Year(), date.Month(), date.Day(), t.Hour(), t.Minute(), 0, 0, now().Location())
+		start = time.Date(date.Year(), date.Month(), date.Day(), t.Hour(), t.Minute(), 0, 0, location)
 	}
 	event, err := queries.CreateEvent(ctx, db.CreateEventParams{
 		Name:        cmd.Name,

@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"io"
 	"time"
 
 	"github.com/ohhfishal/schedule/db"
@@ -17,7 +18,7 @@ type Edit struct {
 	Description *string    `short:"d" default:"" help:"Description for event."`
 }
 
-func (cmd Edit) Run(ctx context.Context, stdout Stdout, queries *db.Queries) error {
+func (cmd Edit) Run(ctx context.Context, stdout io.Writer, queries *db.Queries) error {
 	params := db.UpdateEventParams{
 		ID: cmd.ID,
 	}

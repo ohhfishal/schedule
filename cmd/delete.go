@@ -3,6 +3,7 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"io"
 
 	"github.com/ohhfishal/schedule/db"
 )
@@ -11,7 +12,7 @@ type Delete struct {
 	ID []int64 `arg:"" required:"" help:"ID of event to delete."`
 }
 
-func (cmd Delete) Run(ctx context.Context, stdout Stdout, queries *db.Queries) error {
+func (cmd Delete) Run(ctx context.Context, stdout io.Writer, verbose bool, queries *db.Queries) error {
 	for _, id := range cmd.ID {
 		result, err := queries.DeleteEvent(ctx, id)
 		if err != nil {
@@ -25,7 +26,9 @@ func (cmd Delete) Run(ctx context.Context, stdout Stdout, queries *db.Queries) e
 		if count == 0 {
 			return fmt.Errorf("deleting %d: event not found", id)
 		}
-		fmt.Fprintf(stdout.Verbose(), "deleted %d\n", id)
+		if verbose {
+			fmt.Fprintf(stdout, "deleted %d\n", id)
+		}
 	}
 	return nil
 }
