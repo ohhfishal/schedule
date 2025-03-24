@@ -2,6 +2,8 @@
 # Change Log
  
 ## [Upcoming]
+### Changed
+- Stdout and verbosity handling
 
 ## [v0.2.0] 2025-03-22
 ### Added
