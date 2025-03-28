@@ -36,6 +36,9 @@ func (r Rule) Terminates() bool {
 
 func (r *Rule) Iter(start time.Time) iter.Seq[time.Time] {
 	// TODO: Implement
+	// See: https://icalendar.org/iCalendar-RFC-5545/3-3-10-recurrence-rule.html
+	// NOTES:
+	// If multiple BYxxx rule parts are specified, then after evaluating the specified FREQ and INTERVAL rule parts, the BYxxx rule parts are applied to the current set of evaluated occurrences in the following order: BYMONTH, BYWEEKNO, BYYEARDAY, BYMONTHDAY, BYDAY, BYHOUR, BYMINUTE, BYSECOND and BYSETPOS; then COUNT and UNTIL are evaluated.
 	return nil
 }
 
