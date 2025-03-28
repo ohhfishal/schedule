@@ -1,12 +1,15 @@
 package recurrence
 
 import (
+	"errors"
 	"fmt"
 	"sync"
 
 	"github.com/alecthomas/participle/v2"
 	"github.com/alecthomas/participle/v2/lexer"
 )
+
+var ErrBadValue = errors.New(`invalid value`)
 
 var (
 	ruleLexerInit sync.Once
@@ -17,24 +20,19 @@ var (
 func ParseRRule(input string) (*Rule, error) {
 	lexer, err := getRuleLexer()
 	if err != nil {
-		return nil, fmt.Errorf("bad lexer: %w", err)
+		return nil, fmt.Errorf("lexer: %w", err)
 	}
 	ruleParser, err := participle.Build[ruleGrammar](
 		participle.Lexer(lexer),
 	)
 	if err != nil {
-		return nil, fmt.Errorf("bad grammar: %w", err)
+		return nil, fmt.Errorf("grammar: %w", err)
 	}
 	parsed, err := ruleParser.ParseString("", input)
 	if err != nil {
-		return nil, fmt.Errorf("bad format: %w", err)
+		return nil, fmt.Errorf("format: %w", err)
 	}
 	return parsed.Rule()
-}
-
-func (rg ruleGrammar) Rule() (*Rule, error) {
-	// TODO: Implement
-	return nil, nil
 }
 
 type ruleGrammar struct {
@@ -42,16 +40,64 @@ type ruleGrammar struct {
 }
 
 type parameter struct {
-	Name  string  `parser:"(@Keyword | @Match) '='"`
-	Value []value `parser:"@@ (',' @@)*"`
+	Count      *int       `parser:"'COUNT' '=' @Int"`
+	Freq       *Frequency `parser:"| ('FREQ' '=' @Frequency)"`
+	Until      *string    `parser:"| ('UNTIL' '=' @Time)"`
+	Interval   *int       `parser:"| ('INTERVAL' '=' @Int)"`
+	WeekStart  *Day       `parser:"| ('WKST' '=' @Day)"`
+	BySetPos   *int       `parser:"| ('BYSETPOS' '=' @Int)"`
+	ByYearDay  *int       `parser:"| ('BYYEARDAY' '=' @Int (',' @Int)*)"`
+	ByMonthDay *[]int     `parser:"| ('BYMONTHDAY' '=' @Int (',' @Int)*)"`
+	ByWeekNo   *int       `parser:"| ('BYWEEKNO' '=' @Int)"` // TODO: Make a list?
+	ByHour     *[]int     `parser:"| ('BYHOUR' '=' @Int (',' @Int)*)"`
+	ByMonth    *[]int     `parser:"| ('BYMONTH' '=' @Int (',' @Int)*)"`
+	ByDay      *ByDay     `parser:"| ('BYDAY' '=' @@ (',' @@)*)"`
+	ByMinute   *[]int     `parser:"| ('BYMINUTE' '=' @Int (',' @Int)*)"`
 }
 
-type value struct {
-	// TODO: See if I can have a function to convert Time to time.Time
-	Int       *int       `parser:"@Int?"`
-	Day       *string    `parser:"@Day?"`
-	Time      *string    `parser:"(@Time"`
-	Frequency *Frequency `parser:"| @Frequency)?"`
+func (rg ruleGrammar) Rule() (*Rule, error) {
+	rule := DefaultRule()
+	for _, p := range rg.Parameters {
+		if err := p.Apply(&rule); err != nil {
+			return nil, err
+		}
+	}
+	if err := rule.Valid(); err != nil {
+		return nil, fmt.Errorf(`%w state: %w`, ErrBadValue, err)
+	}
+	return &rule, nil
+}
+
+func (p parameter) Apply(rule *Rule) error {
+	switch {
+	case p.Count != nil:
+		rule.Count = *p.Count
+	case p.Freq != nil:
+		rule.Frequency = *p.Freq
+	case p.Until != nil:
+		// TODO: Covert to time.Time
+	case p.Interval != nil:
+		rule.Interval = *p.Interval
+	case p.WeekStart != nil:
+		rule.WeekStart = *p.WeekStart
+	case p.BySetPos != nil:
+	case p.ByWeekNo != nil:
+	case p.ByYearDay != nil:
+	case p.ByMonthDay != nil:
+	case p.ByHour != nil:
+	case p.ByMonth != nil:
+	case p.ByDay != nil:
+	case p.ByMinute != nil:
+	default:
+		// NOTE: This should never happen
+		return errors.New(`no parameter set`)
+	}
+	return nil
+}
+
+type ByDay struct {
+	Offset *int `parser:"@Int?"`
+	Day    Day  `parser:"@Day"`
 }
 
 var _TIME_REGEX = `\d{8}T\d{6}Z`
@@ -60,11 +106,22 @@ func getRuleLexer() (lexer.Definition, error) {
 	ruleLexerInit.Do(func() {
 		ruleLexer, ruleLexerErr = lexer.NewSimple([]lexer.SimpleRule{
 			{Name: "RRULE", Pattern: `RRULE`},
+			{Name: "FREQ", Pattern: `FREQ`},
+			{Name: "COUNT", Pattern: `COUNT`},
+			{Name: "UNTIL", Pattern: `UNTIL`},
+			{Name: "INTERVAL", Pattern: `INTERVAL`},
+			{Name: "WKST", Pattern: `WKST`},
+			{Name: "BYYEARDAY", Pattern: `BYYEARDAY`},
+			{Name: "BYWEEKNO", Pattern: `BYWEEKNO`},
+			{Name: "BYSETPOS", Pattern: `BYSETPOS`},
+			{Name: "BYMONTHDAY", Pattern: `BYMONTHDAY`},
+			{Name: "BYHOUR", Pattern: `BYHOUR`},
+			{Name: "BYDAY", Pattern: `BYDAY`},
+			{Name: "BYMONTH", Pattern: `BYMONTH`},
+			{Name: "BYMINUTE", Pattern: `BYMINUTE`},
 			{Name: ":", Pattern: `:`},
 			{Name: ",", Pattern: `,`},
 			{Name: ";", Pattern: `;`},
-			{Name: "Keyword", Pattern: `FREQ|COUNT|UNTIL|INTERVAL|WKST`},
-			{Name: "Match", Pattern: `BYYEARDAY|BYWEEKNO|BYSETPOS|BYMONTHDAY|BYMINUTE|BYHOUR|BYDAY|BYMONTH`},
 			{Name: "=", Pattern: `=`},
 			{Name: "Time", Pattern: _TIME_REGEX},
 			{Name: "Frequency", Pattern: `MINUTELY|HOURLY|DAILY|WEEKLY|MONTHLY|YEARLY`},
