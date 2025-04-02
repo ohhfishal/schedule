@@ -2,11 +2,75 @@ package recurrence_test
 
 import (
 	"fmt"
+	"iter"
 	"testing"
+	"time"
 
 	assert "github.com/alecthomas/assert/v2"
 	"github.com/ohhfishal/schedule/lib/recurrence"
 )
+
+var testTime = time.Now()
+var simpleTests = []struct {
+	RRule      string
+	Times      []time.Time
+	Terminates bool
+}{
+	{RRule: "RRULE:FREQ=DAILY", Times: []time.Time{
+		testTime,
+		testTime.Add(recurrence.DAY),
+		testTime.Add(recurrence.DAY * 2),
+		testTime.Add(recurrence.DAY * 3),
+		testTime.Add(recurrence.DAY * 4),
+	}},
+	{RRule: "RRULE:FREQ=DAILY;INTERVAL=2", Times: []time.Time{
+		testTime,
+		testTime.Add(recurrence.DAY * 2),
+		testTime.Add(recurrence.DAY * 4),
+		testTime.Add(recurrence.DAY * 6),
+		testTime.Add(recurrence.DAY * 8),
+	}},
+	{RRule: "RRULE:FREQ=DAILY;COUNT=10", Times: []time.Time{
+		testTime.Add(time.Hour * 24 * 0),
+		testTime.Add(time.Hour * 24 * 1),
+		testTime.Add(time.Hour * 24 * 2),
+		testTime.Add(time.Hour * 24 * 3),
+		testTime.Add(time.Hour * 24 * 4),
+		testTime.Add(time.Hour * 24 * 5),
+		testTime.Add(time.Hour * 24 * 6),
+		testTime.Add(time.Hour * 24 * 7),
+		testTime.Add(time.Hour * 24 * 8),
+		testTime.Add(time.Hour * 24 * 9),
+	}, Terminates: true},
+	// {RRule: "RRULE:FREQ=DAILY;UNTIL=19971224T000000Z"},
+}
+
+func TestFull(t *testing.T) {
+	for i, test := range simpleTests {
+		t.Run(fmt.Sprintf("%d/%s", i, test.RRule), func(t *testing.T) {
+			rule, err := recurrence.ParseRRule(test.RRule)
+			assert.NoError(t, err, "Failed to parse RRULE")
+
+			iterator, err := rule.Iter(testTime)
+			assert.NoError(t, err, "Could not create iterator")
+			index := 0
+			next, stop := iter.Pull[time.Time](iterator)
+			defer stop()
+			for i, expected := range test.Times {
+				result, _ := next()
+				fmt.Println(result)
+				assert.Equal(t, result, expected, fmt.Sprintf("Yielded incorrect time (%d)", i))
+				index++
+			}
+
+			if test.Terminates {
+				assert.Equal(t, len(test.Times), index, "Differing number of elements yielded")
+			}
+		})
+
+	}
+
+}
 
 var tests = []struct {
 	RRule string

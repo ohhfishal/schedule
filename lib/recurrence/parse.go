@@ -74,20 +74,31 @@ func (p parameter) Apply(rule *Rule) error {
 		rule.Count = *p.Count
 	case p.Freq != nil:
 		rule.Frequency = *p.Freq
-	case p.Until != nil:
-		// TODO: Covert to time.Time
 	case p.Interval != nil:
 		rule.Interval = *p.Interval
 	case p.WeekStart != nil:
 		rule.WeekStart = *p.WeekStart
+	case p.Until != nil:
+		// TODO: Covert to time.Time
+		// return errors.New("not implemented")
+		fallthrough
 	case p.BySetPos != nil:
+		fallthrough
 	case p.ByWeekNo != nil:
+		fallthrough
 	case p.ByYearDay != nil:
+		fallthrough
 	case p.ByMonthDay != nil:
+		fallthrough
 	case p.ByHour != nil:
+		fallthrough
 	case p.ByMonth != nil:
+		fallthrough
 	case p.ByDay != nil:
+		fallthrough
 	case p.ByMinute != nil:
+		// return errors.New("not implemented")
+		return nil
 	default:
 		// NOTE: This should never happen
 		return errors.New(`no parameter set`)
