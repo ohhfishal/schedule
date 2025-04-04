@@ -42,7 +42,7 @@ var simpleTests = []struct {
 		testTime.Add(time.Hour * 24 * 8),
 		testTime.Add(time.Hour * 24 * 9),
 	}, Terminates: true},
-	// {RRule: "RRULE:FREQ=DAILY;UNTIL=19971224T000000Z"},
+	{RRule: "RRULE:FREQ=DAILY;UNTIL=19971224T000000Z", Times: []time.Time{}, Terminates: true},
 }
 
 func TestFull(t *testing.T) {
@@ -63,13 +63,15 @@ func TestFull(t *testing.T) {
 				index++
 			}
 
+			_, ok := next()
 			if test.Terminates {
+				assert.Equal(t, false, ok)
 				assert.Equal(t, len(test.Times), index, "Differing number of elements yielded")
+			} else {
+				assert.Equal(t, true, ok)
 			}
 		})
-
 	}
-
 }
 
 var tests = []struct {

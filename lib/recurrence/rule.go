@@ -12,51 +12,41 @@ const NONE = -1
 const DAY = time.Hour * 24
 const WEEK = DAY * 7
 
-type Frequency string
-
-var frequencies = map[Frequency]time.Duration{
-	"MINUTELY": time.Minute,
-	"HOURLY":   time.Hour,
-	"DAILY":    DAY,
-	"WEEKLY":   WEEK,
-	"MONTHLY":  DAY * 28, // TODO: Months are weird...
-	"YEARLY":   DAY * 365,
-}
-
-func (f Frequency) Valid() error {
-	_, ok := frequencies[f]
-	if !ok {
-		return fmt.Errorf(`invalid frequency: %s`, f)
-	}
-	return nil
-}
-
-type Day string
 type Match interface {
 	Match(Rule, time.Time)
 }
 
-func DefaultRule() Rule {
-	return Rule{
-		Interval: NONE,
-		Count:    NONE,
-	}
+type Rule struct {
+	Count     int       // Default NONE
+	Frequency Frequency // Required
+	Until     time.Time // Default zero
+	Interval  int       // Default NONE
+	WeekStart WeekDay   // Default Monday
+	By        []Match   // Default empty
 }
 
-type Rule struct {
-	Count     int
-	Frequency Frequency
-	Until     time.Time
-	Interval  int
-	WeekStart Day // (Enum w/default Monday)
-	By        []Match
+func DefaultRule() Rule {
+	return Rule{
+		Interval:  NONE,
+		Count:     NONE,
+		WeekStart: SUNDAY,
+	}
 }
 
 func (r Rule) Valid() error {
+	if r.Count < NONE {
+		return fmt.Errorf(`count: %d invalid. Must be >= -1`, r.Interval)
+	}
 	if err := r.Frequency.Valid(); err != nil {
 		return err
 	}
-	// TODO: Implement
+	if r.Interval == 0 || r.Interval < NONE {
+		return fmt.Errorf(`interval: %d invalid. Must be -1 or > 0`, r.Interval)
+	}
+	if err := r.WeekStart.Valid(); err != nil {
+		return err
+	}
+	// TODO: Dependeds on how Match is implemented. If stays an interface it's already valid.
 	return nil
 }
 
@@ -84,6 +74,9 @@ func (r Rule) Iter(start time.Time) (iter.Seq[time.Time], error) {
 	count := 1
 	return iter.Seq[time.Time](func(yield func(time.Time) bool) {
 		for {
+			if !r.Until.IsZero() && curTime.After(r.Until) {
+				break
+			}
 			// TODO: Further test this seems wrong
 			// TODO: Move this check to the end of the loop? IE Don't return start?
 			//       This way does address the case where start > r.Until or count = 0
@@ -92,9 +85,9 @@ func (r Rule) Iter(start time.Time) (iter.Seq[time.Time], error) {
 			}
 			curTime = curTime.Add(delta)
 			count++
+			// TODO: Implement BYXXXX
 		}
 
-		// TODO: Implement BYXXXX
 	}), nil
 }
 
