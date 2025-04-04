@@ -2,6 +2,9 @@
 # Change Log
  
 ## [Upcoming]
+### Added
+- Start of RRULE Recurrence library
+
 ### Changed
 - Stdout and verbosity handling
 
