@@ -10,7 +10,9 @@ import (
 	"github.com/ohhfishal/schedule/lib/recurrence"
 )
 
-var testTime = time.Now()
+// 2006-01-02
+var testTime = MustParse(time.DateOnly, time.DateOnly)
+
 var simpleTests = []struct {
 	RRule      string
 	Times      []time.Time
@@ -43,6 +45,12 @@ var simpleTests = []struct {
 		testTime.Add(time.Hour * 24 * 9),
 	}, Terminates: true},
 	{RRule: "RRULE:FREQ=DAILY;UNTIL=19971224T000000Z", Times: []time.Time{}, Terminates: true},
+	{RRule: "RRULE:FREQ=DAILY;COUNT=3;BYDAY=MO,WE,TH", Times: []time.Time{
+		// testTime, // Sunday
+		testTime.Add(recurrence.DAY * 1), // Monday
+		testTime.Add(recurrence.DAY * 3), // Wednesday
+		testTime.Add(recurrence.DAY * 5), // Thursday
+	}, Terminates: true},
 }
 
 func TestFull(t *testing.T) {
@@ -479,3 +487,11 @@ An example where an invalid date (i.e., February 30) is ignored.
      (2007 EST) February 15
      (2007 EDT) March 15,30
 */
+
+func MustParse(layout, value string) time.Time {
+	testTime, err := time.Parse(layout, value)
+	if err != nil {
+		panic(err)
+	}
+	return testTime
+}

@@ -2,11 +2,26 @@ package recurrence
 
 import (
 	"fmt"
+	"slices"
 	"time"
 )
 
-type Frequency string
+type ByFilter uint8
 type WeekDay string
+type Frequency string
+
+//go:generate stringer -type=ByFilter
+
+const (
+	BYSETPOS ByFilter = 1 << iota
+	BYWEEKNO
+	BYYEARDAY
+	BYMONTHDAY
+	BYHOUR
+	BYMONTH
+	BYDAY
+	BYMINUTE
+)
 
 const (
 	SUNDAY    = "SU"
@@ -27,6 +42,17 @@ const (
 	YEARLY   = "YEARLY"
 )
 
+var filters []ByFilter = []ByFilter{
+	BYSETPOS,
+	BYWEEKNO,
+	BYYEARDAY,
+	BYMONTHDAY,
+	BYHOUR,
+	BYMONTH,
+	BYDAY,
+	BYMINUTE,
+}
+
 var weekDays = map[WeekDay]string{
 	SUNDAY:    "Sunday",
 	MONDAY:    "Monday",
@@ -46,10 +72,10 @@ var frequencies = map[Frequency]time.Duration{
 	YEARLY:   DAY * 365,
 }
 
-func (f Frequency) Valid() error {
-	_, ok := frequencies[f]
+func (filter ByFilter) Valid() error {
+	ok := slices.Contains(filters, filter)
 	if !ok {
-		return fmt.Errorf(`invalid frequency: %s`, f)
+		return fmt.Errorf(`invalid filter: %s`, filter)
 	}
 	return nil
 }
@@ -58,6 +84,14 @@ func (day WeekDay) Valid() error {
 	_, ok := weekDays[day]
 	if !ok {
 		return fmt.Errorf(`invalid week day: %s`, day)
+	}
+	return nil
+}
+
+func (f Frequency) Valid() error {
+	_, ok := frequencies[f]
+	if !ok {
+		return fmt.Errorf(`invalid frequency: %s`, f)
 	}
 	return nil
 }
