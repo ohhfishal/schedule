@@ -5,6 +5,9 @@
 ### Added
 - Start of RRULE Recurrence library
 
+### Fixed
+- `edit` to use device location for start/end time.
+
 ### Changed
 - Stdout and verbosity handling
 
