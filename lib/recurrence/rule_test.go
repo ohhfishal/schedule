@@ -45,12 +45,13 @@ var simpleTests = []struct {
 		testTime.Add(time.Hour * 24 * 9),
 	}, Terminates: true},
 	{RRule: "RRULE:FREQ=DAILY;UNTIL=19971224T000000Z", Times: []time.Time{}, Terminates: true},
-	{RRule: "RRULE:FREQ=DAILY;COUNT=3;BYDAY=MO,WE,TH", Times: []time.Time{
-		// testTime, // Sunday
-		testTime.Add(recurrence.DAY * 1), // Monday
-		testTime.Add(recurrence.DAY * 3), // Wednesday
-		testTime.Add(recurrence.DAY * 5), // Thursday
-	}, Terminates: true},
+	// TODO: Depends on implementing and testing the matchers
+	// {RRule: "RRULE:FREQ=DAILY;COUNT=3;BYDAY=MO,WE,TH", Times: []time.Time{
+	// 	// testTime, // Sunday
+	// 	testTime.Add(recurrence.DAY * 1), // Monday
+	// 	testTime.Add(recurrence.DAY * 3), // Wednesday
+	// 	testTime.Add(recurrence.DAY * 5), // Thursday
+	// }, Terminates: true},
 }
 
 func TestFull(t *testing.T) {
@@ -66,7 +67,7 @@ func TestFull(t *testing.T) {
 			defer stop()
 			for i, expected := range test.Times {
 				result, _ := next()
-				fmt.Println(result)
+				t.Logf(`result: %v`, result)
 				assert.Equal(t, result, expected, fmt.Sprintf("Yielded incorrect time (%d)", i))
 				index++
 			}

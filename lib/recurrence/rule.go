@@ -12,9 +12,7 @@ const NONE = -1
 const DAY = time.Hour * 24
 const WEEK = DAY * 7
 
-type Match interface {
-	Match(Rule, time.Time)
-}
+type Match func(time.Time) error
 
 type Rule struct {
 	Count     int       // Default NONE
@@ -59,35 +57,22 @@ func (r Rule) Iter(start time.Time) (iter.Seq[time.Time], error) {
 	if err := r.Valid(); err != nil {
 		return nil, fmt.Errorf(`invalid state: %w`, err)
 	}
-	// See: https://icalendar.org/iCalendar-RFC-5545/3-3-10-recurrence-rule.html
-	// NOTES:
-	// If multiple BYxxx rule parts are specified, then after evaluating the specified FREQ and INTERVAL rule parts, the BYxxx rule parts are applied to the current set of evaluated occurrences in the following order: BYMONTH, BYWEEKNO, BYYEARDAY, BYMONTHDAY, BYDAY, BYHOUR, BYMINUTE, BYSECOND and BYSETPOS; then COUNT and UNTIL are evaluated.
-	curTime := start
-
-	// TODO: This does not work for months since they vary based on the month
-	frequency := frequencies[r.Frequency]
-	delta := frequency
-	if r.Interval != NONE {
-		delta = delta * time.Duration(r.Interval)
+	iterator := ruleIter{
+		Rule:  r,
+		Start: start,
 	}
-
-	count := 1
 	return iter.Seq[time.Time](func(yield func(time.Time) bool) {
+		// TODO: This assumes it is the right one...
 		for {
-			if !r.Until.IsZero() && curTime.After(r.Until) {
-				break
-			}
-			// TODO: Further test this seems wrong
-			// TODO: Move this check to the end of the loop? IE Don't return start?
-			//       This way does address the case where start > r.Until or count = 0
-			if !yield(curTime) || (r.Count != NONE && count >= r.Count) {
+			next, err := iterator.Next()
+			if err != nil {
 				return
 			}
-			curTime = curTime.Add(delta)
-			count++
-			// TODO: Implement BYXXXX
-		}
 
+			if !yield(next) {
+				return
+			}
+		}
 	}), nil
 }
 

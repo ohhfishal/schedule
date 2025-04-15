@@ -89,6 +89,7 @@ func (p parameter) Apply(rule *Rule) error {
 		}
 		rule.Until = until
 	case p.BySetPos != nil:
+		// TODO: Connect these to the correct matchers when implemented
 		fallthrough
 	case p.ByWeekNo != nil:
 		fallthrough
