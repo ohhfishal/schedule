@@ -12,8 +12,6 @@ const NONE = -1
 const DAY = time.Hour * 24
 const WEEK = DAY * 7
 
-type Match func(time.Time) error
-
 type Rule struct {
 	Count     int       // Default NONE
 	Frequency Frequency // Required

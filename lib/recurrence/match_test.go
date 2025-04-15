@@ -8,12 +8,17 @@ import (
 	"github.com/ohhfishal/schedule/lib/recurrence"
 )
 
+var MidnightToday = Midnight()
+
+// {RRule: "RRULE:FREQ=DAILY;BYHOUR=9,10,11,12,13,14,15,16;BYMINUTE=0,20,40"},
+
 func TestByHour(t *testing.T) {
 	tests := []struct {
 		Name       string
 		Hours      []int
 		BuildFails bool
 		Matches    []time.Time
+		NoMatches  []time.Time
 	}{
 		{
 			Name:       `empty input`,
@@ -21,10 +26,57 @@ func TestByHour(t *testing.T) {
 			BuildFails: true,
 		},
 		{
-			Name:  `valid input build`,
-			Hours: []int{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24},
+			Name:       `invalid input fails build`,
+			Hours:      []int{-1},
+			BuildFails: true,
 		},
-		// {RRule: "RRULE:FREQ=DAILY;BYHOUR=9,10,11,12,13,14,15,16;BYMINUTE=0,20,40"},
+		{
+			Name:  `valid input build`,
+			Hours: []int{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23},
+			Matches: []time.Time{
+				MidnightToday.Add(time.Hour * 0),
+				MidnightToday.Add(time.Hour * 1),
+				MidnightToday.Add(time.Hour * 2),
+				MidnightToday.Add(time.Hour * 3),
+				MidnightToday.Add(time.Hour * 4),
+				MidnightToday.Add(time.Hour * 5),
+				MidnightToday.Add(time.Hour * 6),
+				MidnightToday.Add(time.Hour * 7),
+				MidnightToday.Add(time.Hour * 8),
+				MidnightToday.Add(time.Hour * 9),
+				MidnightToday.Add(time.Hour * 10),
+				MidnightToday.Add(time.Hour * 11),
+				MidnightToday.Add(time.Hour * 12),
+				MidnightToday.Add(time.Hour * 13),
+				MidnightToday.Add(time.Hour * 14),
+				MidnightToday.Add(time.Hour * 15),
+				MidnightToday.Add(time.Hour * 16),
+				MidnightToday.Add(time.Hour * 17),
+				MidnightToday.Add(time.Hour * 18),
+				MidnightToday.Add(time.Hour * 19),
+				MidnightToday.Add(time.Hour * 20),
+				MidnightToday.Add(time.Hour * 21),
+				MidnightToday.Add(time.Hour * 22),
+				MidnightToday.Add(time.Hour * 23),
+			},
+		},
+		{
+			Name:  `user example`,
+			Hours: []int{0, 2, 4, 6},
+			Matches: []time.Time{
+				MidnightToday.Add(time.Hour * 0),
+				MidnightToday.Add(time.Hour*2 + time.Minute*30),
+				MidnightToday.Add(time.Hour*4 + time.Minute*30 + time.Second*45),
+				MidnightToday.Add(time.Hour * 6),
+			},
+			NoMatches: []time.Time{
+				MidnightToday.Add(time.Hour * 1),
+				MidnightToday.Add(time.Hour*3 + time.Minute*30),
+				MidnightToday.Add(time.Hour*5 + time.Minute*30 + time.Second*45),
+				MidnightToday.Add(time.Hour * 5),
+				MidnightToday.Add(time.Hour * 7),
+			},
+		},
 	}
 	for _, test := range tests {
 		t.Run(test.Name, func(t *testing.T) {
@@ -39,6 +91,77 @@ func TestByHour(t *testing.T) {
 				err := matcher(match)
 				assert.NoError(t, err, `expected %v to match`, match)
 			}
+
+			for _, noMatch := range test.NoMatches {
+				err := matcher(noMatch)
+				assert.Error(t, err, `expected %v to not match`, noMatch)
+			}
 		})
 	}
+}
+
+func TestByMinute(t *testing.T) {
+	tests := []struct {
+		Name       string
+		Minutes    []int
+		BuildFails bool
+		Matches    []time.Time
+		NoMatches  []time.Time
+	}{
+		{
+			Name:       `empty input`,
+			Minutes:    []int{},
+			BuildFails: true,
+		},
+		{
+			Name:       `invalid input fails build`,
+			Minutes:    []int{-1},
+			BuildFails: true,
+		},
+		{
+			Name:    `valid input build`,
+			Minutes: []int{0, 5, 10},
+			Matches: []time.Time{
+				MidnightToday.Add(time.Minute * 0),
+				MidnightToday.Add(time.Minute * 5),
+				MidnightToday.Add(time.Hour + time.Minute*10),
+			},
+			NoMatches: []time.Time{
+				MidnightToday.Add(time.Hour*1 + time.Minute*3),
+				MidnightToday.Add(time.Hour*3 + time.Minute*30),
+				MidnightToday.Add(time.Hour*5 + time.Minute*30 + time.Second*45),
+			},
+		},
+	}
+	for _, test := range tests {
+		t.Run(test.Name, func(t *testing.T) {
+			matcher, err := recurrence.NewByMinute(test.Minutes)
+			if test.BuildFails {
+				assert.Error(t, err, `expected build to fail`)
+				return
+			}
+			assert.NoError(t, err, `expected build to succeed`)
+
+			for _, match := range test.Matches {
+				err := matcher(match)
+				assert.NoError(t, err, `expected %v to match`, match)
+			}
+
+			for _, noMatch := range test.NoMatches {
+				err := matcher(noMatch)
+				assert.Error(t, err, `expected %v to not match`, noMatch)
+			}
+		})
+	}
+}
+
+func Midnight() time.Time {
+	now := time.Now()
+	return time.Date(
+		now.Year(),
+		now.Month(),
+		now.Day(),
+		0, 0, 0, 0,
+		now.Location(),
+	)
 }
