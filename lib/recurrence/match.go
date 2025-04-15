@@ -11,8 +11,8 @@ type Match func(time.Time) error
 
 // One for each
 // [X] BYHOUR
-// [X] BYMINUTE // TODO Test
-// [ ] BYMONTH // Look up table to time.Month
+// [X] BYMINUTE
+// [X] BYMONTH
 // [ ] BYMONTHDAY
 // [ ] BYDAY
 // [ ] BYYEARDAY
@@ -29,6 +29,7 @@ func NewByHour(initial []int) (Match, error) {
 			return nil, fmt.Errorf(`invalid hour: %d`, hour)
 		}
 	}
+
 	hours := slices.Clone(initial)
 	return Match(func(date time.Time) error {
 		hour := date.Hour()
@@ -48,11 +49,34 @@ func NewByMinute(initial []int) (Match, error) {
 			return nil, fmt.Errorf(`invalid minute: %d`, minute)
 		}
 	}
+
 	minutes := slices.Clone(initial)
 	return Match(func(date time.Time) error {
 		minute := date.Minute()
 		if !slices.Contains(minutes, minute) {
 			return fmt.Errorf(`BYMINUTE: minute %d not included in %v`, minute, minutes)
+		}
+		return nil
+	}), nil
+}
+
+func NewByMonth(initial []int) (Match, error) {
+	if len(initial) == 0 {
+		return nil, errors.New(`must include at least one hour to match`)
+	}
+
+	months := []time.Month{}
+	for _, month := range initial {
+		if month < 1 || month > 12 {
+			return nil, fmt.Errorf(`invalid month: %d`, month)
+		}
+		months = append(months, (time.Month)(month))
+	}
+
+	return Match(func(date time.Time) error {
+		month := date.Month()
+		if !slices.Contains(months, month) {
+			return fmt.Errorf(`BYMONTH: month %d not included in %v`, month, months)
 		}
 		return nil
 	}), nil

@@ -8,9 +8,65 @@ import (
 	"github.com/ohhfishal/schedule/lib/recurrence"
 )
 
+var NewYears = ThisYear()
 var MidnightToday = Midnight()
+var now = time.Now()
 
 // {RRule: "RRULE:FREQ=DAILY;BYHOUR=9,10,11,12,13,14,15,16;BYMINUTE=0,20,40"},
+
+func TestByMonth(t *testing.T) {
+	tests := []struct {
+		Name       string
+		Months     []int
+		BuildFails bool
+		Matches    []time.Time
+		NoMatches  []time.Time
+	}{
+		{
+			Name:       `empty input`,
+			Months:     []int{},
+			BuildFails: true,
+		},
+		{
+			Name:       `invalid input fails build`,
+			Months:     []int{-1},
+			BuildFails: true,
+		},
+		{
+			Name:   `invalid input fails build`,
+			Months: []int{1, 3, 5, 7, 9, 11},
+			Matches: []time.Time{
+				time.Date(now.Year(), 1, 1, 0, 0, 0, 0, now.Location()),
+				time.Date(now.Year(), 1, 2, 0, 0, 0, 0, now.Location()),
+				time.Date(now.Year(), 3, 14, 1, 5, 9, 2, now.Location()),
+			},
+			NoMatches: []time.Time{
+				time.Date(now.Year(), 2, 1, 0, 0, 0, 0, now.Location()),
+				time.Date(now.Year(), 6, 15, 0, 0, 0, 0, now.Location()),
+			},
+		},
+	}
+	for _, test := range tests {
+		t.Run(test.Name, func(t *testing.T) {
+			matcher, err := recurrence.NewByMonth(test.Months)
+			if test.BuildFails {
+				assert.Error(t, err, `expected build to fail`)
+				return
+			}
+			assert.NoError(t, err, `expected build to succeed`)
+
+			for _, match := range test.Matches {
+				err := matcher(match)
+				assert.NoError(t, err, `expected %v to match`, match)
+			}
+
+			for _, noMatch := range test.NoMatches {
+				err := matcher(noMatch)
+				assert.Error(t, err, `expected %v to not match`, noMatch)
+			}
+		})
+	}
+}
 
 func TestByHour(t *testing.T) {
 	tests := []struct {
@@ -153,6 +209,11 @@ func TestByMinute(t *testing.T) {
 			}
 		})
 	}
+}
+
+func ThisYear() time.Time {
+	now := time.Now()
+	return time.Date(now.Year(), 1, 1, 0, 0, 0, 0, now.Location())
 }
 
 func Midnight() time.Time {
