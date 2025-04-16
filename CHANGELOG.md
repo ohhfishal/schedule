@@ -5,11 +5,10 @@
 ### Added
 - Start of RRULE Recurrence library
 
-### Fixed
-- `edit` to use device location for start/end time.
-
 ### Changed
+- `get` to use subcommands
 - Stdout and verbosity handling
+- `edit` to use device location for start/end time.
 
 ## [v0.2.0] 2025-03-22
 ### Added
