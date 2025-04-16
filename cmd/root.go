@@ -8,17 +8,18 @@ import (
 	"time"
 
 	"github.com/alecthomas/kong"
+	"github.com/ohhfishal/schedule/cmd/get"
 	"github.com/ohhfishal/schedule/db"
 )
 
 type Root struct {
-	Driver     string `default:"sqlite" env:"DRIVER" help:"Driver to use as for backed"`
-	DataSource string `default:"schedule.db" env:"DATA_SOURCE" help:"Connection string for driver"`
-	Verbose    bool   `short:"v" help:"Print more information to screen."`
-	New        New    `cmd:"" help:"Create a new event."`
-	Get        Get    `cmd:"" help:"Get events"`
-	Delete     Delete `cmd:"" help:"Delete events by ID"`
-	Edit       Edit   `cmd:"" help:"Edit an event by ID"`
+	Driver     string  `default:"sqlite" env:"DRIVER" help:"Driver to use as for backed"`
+	DataSource string  `default:"schedule.db" env:"DATA_SOURCE" help:"Connection string for driver"`
+	Verbose    bool    `short:"v" help:"Print more information to screen."`
+	New        New     `cmd:"" help:"Create a new event."`
+	Get        get.CMD `cmd:"" help:"Get events"`
+	Delete     Delete  `cmd:"" help:"Delete events by ID"`
+	Edit       Edit    `cmd:"" help:"Edit an event by ID"`
 }
 
 func Run(ctx context.Context, stdout io.Writer, args []string) error {
