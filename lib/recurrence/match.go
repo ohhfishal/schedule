@@ -125,11 +125,19 @@ func NewByDay(initial []ByDay) (Match, error) {
 	}
 
 	return Match(func(date time.Time) error {
-		// month := date.Month()
-		// if !slices.Contains(months, month) {
-		// 	return fmt.Errorf(`BYMONTH: month %d not included in %v`, month, months)
-		// }
-		return nil
+		day := date.Weekday()
+		for _, entry := range entries {
+			goDay, ok := weekDays[entry.Day]
+			if !ok {
+				return fmt.Errorf(`invalid day: %v`, entry.Day)
+			}
+			if day == goDay {
+				return nil
+			}
+			// TODO: Handle cases formatted as: -1MU
+		}
+		// TODO: Better format entries?
+		return fmt.Errorf(`BYDAY: day %d not included in %v`, day, entries)
 	}), nil
 }
 
