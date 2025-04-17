@@ -90,21 +90,33 @@ func (p parameter) Apply(rule *Rule) error {
 		rule.Until = until
 	case p.BySetPos != nil:
 		// TODO: Connect these to the correct matchers when implemented
-		fallthrough
 	case p.ByWeekNo != nil:
-		fallthrough
 	case p.ByYearDay != nil:
-		fallthrough
-	case p.ByMonthDay != nil:
-		fallthrough
-	case p.ByHour != nil:
-		fallthrough
-	case p.ByMonth != nil:
-		fallthrough
 	case p.ByDay != nil:
-		fallthrough
+	case p.ByHour != nil:
+		matcher, err := NewByHour(*p.ByHour)
+		if err != nil {
+			return fmt.Errorf(`invalid ByHour: %w`, err)
+		}
+		rule.By = append(rule.By, matcher)
+	case p.ByMonth != nil:
+		matcher, err := NewByMonth(*p.ByMonth)
+		if err != nil {
+			return fmt.Errorf(`invalid ByMonth: %w`, err)
+		}
+		rule.By = append(rule.By, matcher)
 	case p.ByMinute != nil:
-		return nil
+		matcher, err := NewByMinute(*p.ByMinute)
+		if err != nil {
+			return fmt.Errorf(`invalid ByMinute: %w`, err)
+		}
+		rule.By = append(rule.By, matcher)
+	case p.ByMonthDay != nil:
+		matcher, err := NewByMonthDay(*p.ByMonthDay)
+		if err != nil {
+			return fmt.Errorf(`invalid ByMonthDay: %w`, err)
+		}
+		rule.By = append(rule.By, matcher)
 	default:
 		// NOTE: This should never happen
 		return errors.New(`no parameter set`)

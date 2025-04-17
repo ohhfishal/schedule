@@ -3,6 +3,7 @@ package recurrence
 import (
 	"errors"
 	"fmt"
+	"math"
 	"slices"
 	"time"
 )
@@ -80,4 +81,64 @@ func NewByMonth(initial []int) (Match, error) {
 		}
 		return nil
 	}), nil
+}
+
+func NewByMonthDay(initial []int) (Match, error) {
+	if len(initial) == 0 {
+		return nil, errors.New(`must include at least one hour to match`)
+	}
+
+	days := []int{}
+	for _, day := range initial {
+		if day == 0 || day > 31 || day < -31 {
+			return nil, fmt.Errorf(`invalid month: %d`, day)
+		}
+		days = append(days, day)
+	}
+
+	return Match(func(date time.Time) error {
+		day := date.Day()
+		daysInMonth := daysIn(date)
+
+		helper := func(match int) bool {
+			return (day == match) || (match < 0 && (daysInMonth)+match+1 == day) ||
+				(match > daysInMonth && day == daysInMonth) ||
+				(int(math.Abs(float64(match))) >= daysInMonth && day == 1)
+		}
+
+		// Exact match
+		if slices.ContainsFunc(days, helper) {
+			return nil
+		}
+		return fmt.Errorf(`BYMONTHDAY: day %d not included in %v`, day, days)
+	}), nil
+}
+
+// From: https://cs.opensource.google/go/go/+/refs/tags/go1.24.2:src/time/time.go;l=1679-1689
+func isLeap(year int) bool {
+	// year%4 == 0 && (year%100 != 0 || year%400 == 0)
+	// Bottom 2 bits must be clear.
+	// For multiples of 25, bottom 4 bits must be clear.
+	// Thanks to Cassio Neri for this trick.
+	mask := 0xf
+	if year%25 != 0 {
+		mask = 3
+	}
+	return year&mask == 0
+}
+
+// From:https://cs.opensource.google/go/go/+/refs/tags/go1.24.2:src/time/time.go;l=1285-1298s://cs.opensource.google/go/go/+/refs/tags/go1.24.2:src/time/time.go;l=1285-1298
+func daysIn(t time.Time) int {
+	month := t.Month()
+	if month == time.February {
+		if isLeap(t.Year()) {
+			return 29
+		}
+		return 28
+	}
+	// With the special case of February eliminated, the pattern is
+	//	31 30 31 30 31 30 31 31 30 31 30 31
+	// Adding m&1 produces the basic alternation;
+	// adding (m>>3)&1 inverts the alternation starting in August.
+	return 30 + int((month+month>>3)&1)
 }

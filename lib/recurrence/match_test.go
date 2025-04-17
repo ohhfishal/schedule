@@ -33,7 +33,7 @@ func TestByMonth(t *testing.T) {
 			BuildFails: true,
 		},
 		{
-			Name:   `invalid input fails build`,
+			Name:   `valid examples`,
 			Months: []int{1, 3, 5, 7, 9, 11},
 			Matches: []time.Time{
 				time.Date(now.Year(), 1, 1, 0, 0, 0, 0, now.Location()),
@@ -49,6 +49,101 @@ func TestByMonth(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.Name, func(t *testing.T) {
 			matcher, err := recurrence.NewByMonth(test.Months)
+			if test.BuildFails {
+				assert.Error(t, err, `expected build to fail`)
+				return
+			}
+			assert.NoError(t, err, `expected build to succeed`)
+
+			for _, match := range test.Matches {
+				err := matcher(match)
+				assert.NoError(t, err, `expected %v to match`, match)
+			}
+
+			for _, noMatch := range test.NoMatches {
+				err := matcher(noMatch)
+				assert.Error(t, err, `expected %v to not match`, noMatch)
+			}
+		})
+	}
+}
+
+func TestByMonthDay(t *testing.T) {
+	tests := []struct {
+		Name       string
+		Days       []int
+		BuildFails bool
+		Matches    []time.Time
+		NoMatches  []time.Time
+	}{
+		{
+			Name:       `empty input`,
+			Days:       []int{},
+			BuildFails: true,
+		},
+		{
+			Name:       `invalid input fails build`,
+			Days:       []int{-32},
+			BuildFails: true,
+		},
+		{
+			Name: `valid examples`,
+			Days: []int{1, 3, 5, 7, 9, 11, 13},
+			Matches: []time.Time{
+				time.Date(now.Year(), time.January, 1, 0, 0, 0, 0, now.Location()),
+				time.Date(now.Year(), time.March, 3, 0, 0, 0, 0, now.Location()),
+				time.Date(now.Year(), time.April, 5, 0, 0, 0, 0, now.Location()),
+				time.Date(now.Year(), time.May, 7, 0, 0, 0, 0, now.Location()),
+				time.Date(now.Year(), time.December, 9, 0, 0, 0, 0, now.Location()),
+			},
+			NoMatches: []time.Time{
+				time.Date(now.Year(), time.January, 2, 0, 0, 0, 0, now.Location()),
+				time.Date(now.Year(), time.March, 4, 0, 0, 0, 0, now.Location()),
+				time.Date(now.Year(), time.April, 6, 0, 0, 0, 0, now.Location()),
+				time.Date(now.Year(), time.May, 8, 0, 0, 0, 0, now.Location()),
+				time.Date(now.Year(), time.December, 10, 0, 0, 0, 0, now.Location()),
+			},
+		},
+		{
+			Name: `clamping positive days`,
+			Days: []int{30},
+			Matches: []time.Time{
+				// Not a leap year
+				time.Date(2025, time.February, 28, 0, 0, 0, 0, now.Location()),
+				// Leap year
+				time.Date(2024, time.February, 29, 0, 0, 0, 0, now.Location()),
+			},
+			NoMatches: []time.Time{
+				time.Date(now.Year(), time.January, 31, 0, 0, 0, 0, now.Location()),
+			},
+		},
+		{
+			Name: `clamping negative days`,
+			Days: []int{-30},
+			Matches: []time.Time{
+				// Not a leap year
+				time.Date(2025, time.February, 1, 0, 0, 0, 0, now.Location()),
+				// Leap year
+				time.Date(2024, time.February, 1, 0, 0, 0, 0, now.Location()),
+				time.Date(2024, time.April, 1, 0, 0, 0, 0, now.Location()),
+				time.Date(now.Year(), time.January, 2, 0, 0, 0, 0, now.Location()),
+			},
+		},
+		{
+			Name: `negative days`,
+			Days: []int{-1},
+			Matches: []time.Time{
+				// Not a leap year
+				time.Date(2025, time.February, 28, 0, 0, 0, 0, now.Location()),
+				// Leap year
+				time.Date(2024, time.February, 29, 0, 0, 0, 0, now.Location()),
+				time.Date(now.Year(), time.January, 31, 0, 0, 0, 0, now.Location()),
+			},
+		},
+	}
+	for _, test := range tests {
+		t.Run(test.Name, func(t *testing.T) {
+			matcher, err := recurrence.NewByMonthDay(test.Days)
 			if test.BuildFails {
 				assert.Error(t, err, `expected build to fail`)
 				return
