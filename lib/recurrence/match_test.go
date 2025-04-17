@@ -11,6 +11,7 @@ import (
 var NewYears = ThisYear()
 var MidnightToday = Midnight()
 var now = time.Now()
+var LeapYear = 2024
 
 // {RRule: "RRULE:FREQ=DAILY;BYHOUR=9,10,11,12,13,14,15,16;BYMINUTE=0,20,40"},
 
@@ -110,8 +111,7 @@ func TestByMonthDay(t *testing.T) {
 			Matches: []time.Time{
 				// Not a leap year
 				time.Date(2025, time.February, 28, 0, 0, 0, 0, now.Location()),
-				// Leap year
-				time.Date(2024, time.February, 29, 0, 0, 0, 0, now.Location()),
+				time.Date(LeapYear, time.February, 29, 0, 0, 0, 0, now.Location()),
 			},
 			NoMatches: []time.Time{
 				time.Date(now.Year(), time.January, 31, 0, 0, 0, 0, now.Location()),
@@ -121,12 +121,18 @@ func TestByMonthDay(t *testing.T) {
 			Name: `clamping negative days`,
 			Days: []int{-30},
 			Matches: []time.Time{
-				// Not a leap year
 				time.Date(2025, time.February, 1, 0, 0, 0, 0, now.Location()),
-				// Leap year
-				time.Date(2024, time.February, 1, 0, 0, 0, 0, now.Location()),
-				time.Date(2024, time.April, 1, 0, 0, 0, 0, now.Location()),
+				time.Date(LeapYear, time.February, 1, 0, 0, 0, 0, now.Location()),
+				time.Date(LeapYear, time.April, 1, 0, 0, 0, 0, now.Location()),
 				time.Date(now.Year(), time.January, 2, 0, 0, 0, 0, now.Location()),
+			},
+		},
+		{
+			Name: `clamping negative days/2`,
+			Days: []int{-6},
+			Matches: []time.Time{
+				time.Date(2025, time.February, 23, 0, 0, 0, 0, now.Location()),
+				time.Date(LeapYear, time.February, 24, 0, 0, 0, 0, now.Location()),
 			},
 		},
 		{
@@ -136,7 +142,7 @@ func TestByMonthDay(t *testing.T) {
 				// Not a leap year
 				time.Date(2025, time.February, 28, 0, 0, 0, 0, now.Location()),
 				// Leap year
-				time.Date(2024, time.February, 29, 0, 0, 0, 0, now.Location()),
+				time.Date(LeapYear, time.February, 29, 0, 0, 0, 0, now.Location()),
 				time.Date(now.Year(), time.January, 31, 0, 0, 0, 0, now.Location()),
 			},
 		},
