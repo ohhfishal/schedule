@@ -13,19 +13,19 @@ const DAY = time.Hour * 24
 const WEEK = DAY * 7
 
 type Rule struct {
-	Count     int       // Default NONE
-	Frequency Frequency // Required
-	Until     time.Time // Default zero
-	Interval  int       // Default NONE
-	WeekStart WeekDay   // Default Monday
-	By        []Match   // Default empty
+	Count     int          // Default NONE
+	Frequency Frequency    // Required
+	Until     time.Time    // Default zero
+	Interval  int          // Default NONE
+	WeekStart time.Weekday // Default Monday
+	By        []Match      // Default empty
 }
 
 func DefaultRule() Rule {
 	return Rule{
 		Interval:  NONE,
 		Count:     NONE,
-		WeekStart: SUNDAY,
+		WeekStart: time.Sunday,
 	}
 }
 
@@ -39,8 +39,8 @@ func (r Rule) Valid() error {
 	if r.Interval == 0 || r.Interval < NONE {
 		return fmt.Errorf(`interval: %d invalid. Must be -1 or > 0`, r.Interval)
 	}
-	if err := r.WeekStart.Valid(); err != nil {
-		return err
+	if r.WeekStart < time.Sunday || r.WeekStart > time.Saturday {
+		return fmt.Errorf(`week start: %d invalid`, r.WeekStart)
 	}
 	// TODO: Dependeds on how Match is implemented. If stays an interface it's already valid.
 	return nil

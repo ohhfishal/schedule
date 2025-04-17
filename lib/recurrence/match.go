@@ -14,7 +14,7 @@ type Match func(time.Time) error
 // [X] BYHOUR
 // [X] BYMINUTE
 // [X] BYMONTH
-// [ ] BYMONTHDAY
+// [X] BYMONTHDAY
 // [ ] BYDAY
 // [ ] BYYEARDAY
 // --- Harder ones
@@ -106,11 +106,30 @@ func NewByMonthDay(initial []int) (Match, error) {
 				(int(math.Abs(float64(match))) >= daysInMonth && day == 1)
 		}
 
-		// Exact match
-		if slices.ContainsFunc(days, helper) {
-			return nil
+		if !slices.ContainsFunc(days, helper) {
+			return fmt.Errorf(`BYMONTHDAY: day %d not included in %v`, day, days)
 		}
-		return fmt.Errorf(`BYMONTHDAY: day %d not included in %v`, day, days)
+		return nil
+	}), nil
+}
+
+func NewByDay(initial []ByDay) (Match, error) {
+	if len(initial) == 0 {
+		return nil, errors.New(`must include at least one day to match`)
+	}
+
+	entries := []ByDay{}
+	for _, entry := range initial {
+		// TODO: Validate input
+		entries = append(entries, entry)
+	}
+
+	return Match(func(date time.Time) error {
+		// month := date.Month()
+		// if !slices.Contains(months, month) {
+		// 	return fmt.Errorf(`BYMONTH: month %d not included in %v`, month, months)
+		// }
+		return nil
 	}), nil
 }
 

@@ -53,14 +53,14 @@ var filters []ByFilter = []ByFilter{
 	BYMINUTE,
 }
 
-var weekDays = map[WeekDay]string{
-	SUNDAY:    "Sunday",
-	MONDAY:    "Monday",
-	TUESDAY:   "Tuesday",
-	WEDNESDAY: "Wednesday",
-	THURSDAY:  "Thursday",
-	FRIDAY:    "Friday",
-	SATURDAY:  "Saturday",
+var weekDays = map[WeekDay]time.Weekday{
+	SUNDAY:    time.Sunday,
+	MONDAY:    time.Monday,
+	TUESDAY:   time.Tuesday,
+	WEDNESDAY: time.Wednesday,
+	THURSDAY:  time.Thursday,
+	FRIDAY:    time.Friday,
+	SATURDAY:  time.Saturday,
 }
 
 var frequencies = map[Frequency]time.Duration{
