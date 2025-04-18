@@ -37,15 +37,20 @@ func (iter *ruleIter) Next() (time.Time, error) {
 			delta = delta * time.Duration(iter.Rule.Interval)
 		}
 		iter.cursor = iter.cursor.Add(delta)
-		iter.count++
-		if err := contains(iter.Rule, cur); err == nil {
+		if err := contains(iter.Rule.By, cur); err == nil {
+			iter.count++
 			return cur, nil
 		}
 	}
 	return time.Time{}, errors.New(`max iterations reached`)
 }
 
-func contains(rule Rule, date time.Time) error {
+func contains(matchers []Match, date time.Time) error {
+	for _, matcher := range matchers {
+		if err := matcher(date); err != nil {
+			return err
+		}
+	}
 	// TODO: Apply all the ByDay...
 	// See: https://icalendar.org/iCalendar-RFC-5545/3-3-10-recurrence-rule.html
 	// NOTES:
