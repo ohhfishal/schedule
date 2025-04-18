@@ -5,6 +5,7 @@ import (
 	_ "embed"
 	"fmt"
 	"io"
+	"slices"
 	"text/template"
 	"time"
 
@@ -49,13 +50,35 @@ func (cmd Default) Run(ctx context.Context, stdout io.Writer, queries *db.Querie
 		today = Midnight(time.Now())
 	}
 
-	events, err := queries.GetEvents(ctx, db.GetEventsParams{
-		Start: today.Unix(),
-		End:   today.Add(DAY).Unix(),
-	})
-
+	allEvents, err := queries.GetAllEvents(ctx)
 	if err != nil {
 		return fmt.Errorf(`getting events: %w`, err)
+	}
+
+	start := today.Unix()
+	end := today.Add(DAY).Unix()
+	var events []db.Event
+	for _, event := range allEvents {
+		if start <= event.StartTime && event.StartTime <= end {
+			events = append(events, event)
+			continue
+		} else if event.Recurrence == nil {
+			continue
+		} else if event.Recurrence.Until.IsZero() {
+			event.Recurrence.Until = today.Add(DAY + time.Nanosecond)
+		}
+		matches, err := event.Recurrence.All(time.Unix(event.StartTime, 0))
+		if err != nil {
+			return fmt.Errorf(`db had invalid RRULE: %w`, err)
+		}
+
+		if slices.ContainsFunc(matches, func(t time.Time) bool {
+			y, m, d := t.Date()
+			year, month, day := today.Date()
+			return year == y && month == m && day == d
+		}) {
+			events = append(events, event)
+		}
 	}
 
 	tmpl, err := template.New("markdown-template").
@@ -79,7 +102,7 @@ func Midnight(now time.Time) time.Time {
 }
 
 func Markdown(event db.Event) string {
-	return fmt.Sprintf("- %s - %s%s",
+	return fmt.Sprintf("- %s - %s%s\n",
 		time.Unix(event.StartTime, 0).Format("15:04"),
 		event.Name,
 		event.Description,

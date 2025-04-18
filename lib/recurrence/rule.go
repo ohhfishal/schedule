@@ -1,6 +1,8 @@
 package recurrence
 
 import (
+	"database/sql/driver"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"time"
@@ -48,7 +50,7 @@ func (r Rule) Valid() error {
 
 func (r Rule) Terminates() bool {
 	// TODO: Implement
-	return true
+	return !r.Until.IsZero() || r.Count > 0
 }
 
 func (r Rule) Iter(start time.Time) (iter.Seq[time.Time], error) {
@@ -88,4 +90,29 @@ func (r *Rule) All(start time.Time) ([]time.Time, error) {
 		matches = append(matches, t)
 	}
 	return matches, nil
+}
+
+func (r *Rule) Scan(value interface{}) error {
+	if value == nil {
+		*r = Rule{}
+		return nil
+	}
+
+	bytes, ok := value.([]byte)
+	if !ok {
+		s, ok := value.(string)
+		if ok {
+			bytes = []byte(s)
+		} else {
+			return fmt.Errorf("failed to unmarshal Rule value: %v", value)
+		}
+	}
+	return json.Unmarshal(bytes, r)
+}
+
+func (r Rule) Value() (driver.Value, error) {
+	if r.Frequency == `` {
+		return nil, nil
+	}
+	return json.Marshal(r)
 }
