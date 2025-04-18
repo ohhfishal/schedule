@@ -25,7 +25,7 @@ func (cmd All) Run(ctx context.Context, stdout io.Writer, queries *db.Queries) e
 	}
 
 	if len(events) == 0 {
-		fmt.Fprintln(stdout, `No events for today :(`)
+		fmt.Fprintln(stdout, `No events`)
 		return nil
 	}
 
