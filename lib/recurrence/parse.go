@@ -4,12 +4,16 @@ import (
 	"errors"
 	"fmt"
 	"sync"
+	"time"
 
 	"github.com/alecthomas/participle/v2"
 	"github.com/alecthomas/participle/v2/lexer"
 )
 
 var ErrBadValue = errors.New(`invalid value`)
+
+var _TIME_REGEX = `\d{8}T\d{6}Z`
+var TIME_FORMAT = `20060102T150405Z`
 
 var (
 	ruleLexerInit sync.Once
@@ -44,14 +48,14 @@ type parameter struct {
 	Freq       *Frequency `parser:"| ('FREQ' '=' @Frequency)"`
 	Until      *string    `parser:"| ('UNTIL' '=' @Time)"`
 	Interval   *int       `parser:"| ('INTERVAL' '=' @Int)"`
-	WeekStart  *Day       `parser:"| ('WKST' '=' @Day)"`
+	WeekStart  *WeekDay   `parser:"| ('WKST' '=' @Day)"`
 	BySetPos   *int       `parser:"| ('BYSETPOS' '=' @Int)"`
-	ByYearDay  *int       `parser:"| ('BYYEARDAY' '=' @Int (',' @Int)*)"`
+	ByYearDay  *[]int     `parser:"| ('BYYEARDAY' '=' @Int (',' @Int)*)"`
 	ByMonthDay *[]int     `parser:"| ('BYMONTHDAY' '=' @Int (',' @Int)*)"`
 	ByWeekNo   *int       `parser:"| ('BYWEEKNO' '=' @Int)"` // TODO: Make a list?
 	ByHour     *[]int     `parser:"| ('BYHOUR' '=' @Int (',' @Int)*)"`
 	ByMonth    *[]int     `parser:"| ('BYMONTH' '=' @Int (',' @Int)*)"`
-	ByDay      *ByDay     `parser:"| ('BYDAY' '=' @@ (',' @@)*)"`
+	ByDay      *[]ByDay   `parser:"| ('BYDAY' '=' @@ (',' @@)*)"`
 	ByMinute   *[]int     `parser:"| ('BYMINUTE' '=' @Int (',' @Int)*)"`
 }
 
@@ -69,38 +73,66 @@ func (rg ruleGrammar) Rule() (*Rule, error) {
 }
 
 func (p parameter) Apply(rule *Rule) error {
+	var matcher Match
+	var err error
 	switch {
 	case p.Count != nil:
 		rule.Count = *p.Count
+		return nil
 	case p.Freq != nil:
 		rule.Frequency = *p.Freq
-	case p.Until != nil:
-		// TODO: Covert to time.Time
+		return nil
 	case p.Interval != nil:
 		rule.Interval = *p.Interval
+		return nil
 	case p.WeekStart != nil:
-		rule.WeekStart = *p.WeekStart
+		enum, ok := weekDays[*p.WeekStart]
+		if !ok {
+			return fmt.Errorf(`invalid week: %v`, *p.WeekStart)
+		}
+		rule.WeekStart = enum
+		return nil
+	case p.Until != nil:
+		until, err := time.Parse(TIME_FORMAT, *p.Until)
+		if err != nil {
+			return fmt.Errorf(`invalid until time: %s: expected: %s`, *p.Until, TIME_FORMAT)
+		}
+		rule.Until = until
+		return nil
 	case p.BySetPos != nil:
+		// TODO: Connect these to the correct matchers when implemented
 	case p.ByWeekNo != nil:
+		// TODO: Connect these to the correct matchers when implemented
 	case p.ByYearDay != nil:
-	case p.ByMonthDay != nil:
-	case p.ByHour != nil:
-	case p.ByMonth != nil:
+		matcher, err = NewByYearDay(*p.ByYearDay)
 	case p.ByDay != nil:
+		matcher, err = NewByDay(*p.ByDay)
+	case p.ByHour != nil:
+		matcher, err = NewByHour(*p.ByHour)
+	case p.ByMonth != nil:
+		matcher, err = NewByMonth(*p.ByMonth)
 	case p.ByMinute != nil:
+		matcher, err = NewByMinute(*p.ByMinute)
+	case p.ByMonthDay != nil:
+		matcher, err = NewByMonthDay(*p.ByMonthDay)
 	default:
-		// NOTE: This should never happen
 		return errors.New(`no parameter set`)
+	}
+
+	if err != nil {
+		return fmt.Errorf(`invalid: %w`, err)
+	}
+
+	if matcher != nil {
+		rule.By = append(rule.By, matcher)
 	}
 	return nil
 }
 
 type ByDay struct {
-	Offset *int `parser:"@Int?"`
-	Day    Day  `parser:"@Day"`
+	Offset *int    `parser:"@Int?"`
+	Day    WeekDay `parser:"@Day"`
 }
-
-var _TIME_REGEX = `\d{8}T\d{6}Z`
 
 func getRuleLexer() (lexer.Definition, error) {
 	ruleLexerInit.Do(func() {

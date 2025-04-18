@@ -8,32 +8,42 @@ package db
 import (
 	"context"
 	"database/sql"
+
+	"github.com/ohhfishal/schedule/lib/recurrence"
 )
 
 const createEvent = `-- name: CreateEvent :one
 INSERT INTO events (
   name,
   description,
-  start_time
+  start_time,
+  recurrence
 ) VALUES (
-  ?, ?, ?
+  ?, ?, ?, ?
 )
-RETURNING id, name, description, start_time, end_time
+RETURNING id, name, description, recurrence, start_time, end_time
 `
 
 type CreateEventParams struct {
-	Name        string `json:"name"`
-	Description string `json:"description"`
-	StartTime   int64  `json:"start_time"`
+	Name        string           `json:"name"`
+	Description string           `json:"description"`
+	StartTime   int64            `json:"start_time"`
+	Recurrence  *recurrence.Rule `json:"recurrence"`
 }
 
 func (q *Queries) CreateEvent(ctx context.Context, arg CreateEventParams) (Event, error) {
-	row := q.db.QueryRowContext(ctx, createEvent, arg.Name, arg.Description, arg.StartTime)
+	row := q.db.QueryRowContext(ctx, createEvent,
+		arg.Name,
+		arg.Description,
+		arg.StartTime,
+		arg.Recurrence,
+	)
 	var i Event
 	err := row.Scan(
 		&i.ID,
 		&i.Name,
 		&i.Description,
+		&i.Recurrence,
 		&i.StartTime,
 		&i.EndTime,
 	)
@@ -50,7 +60,7 @@ func (q *Queries) DeleteEvent(ctx context.Context, id int64) (sql.Result, error)
 }
 
 const getAllEvents = `-- name: GetAllEvents :many
-SELECT id, name, description, start_time, end_time FROM events
+SELECT id, name, description, recurrence, start_time, end_time FROM events
 ORDER BY id
 `
 
@@ -67,6 +77,7 @@ func (q *Queries) GetAllEvents(ctx context.Context) ([]Event, error) {
 			&i.ID,
 			&i.Name,
 			&i.Description,
+			&i.Recurrence,
 			&i.StartTime,
 			&i.EndTime,
 		); err != nil {
@@ -84,7 +95,7 @@ func (q *Queries) GetAllEvents(ctx context.Context) ([]Event, error) {
 }
 
 const getEvent = `-- name: GetEvent :one
-SELECT id, name, description, start_time, end_time FROM events
+SELECT id, name, description, recurrence, start_time, end_time FROM events
 WHERE id = ? LIMIT 1
 `
 
@@ -95,6 +106,7 @@ func (q *Queries) GetEvent(ctx context.Context, id int64) (Event, error) {
 		&i.ID,
 		&i.Name,
 		&i.Description,
+		&i.Recurrence,
 		&i.StartTime,
 		&i.EndTime,
 	)
@@ -102,7 +114,7 @@ func (q *Queries) GetEvent(ctx context.Context, id int64) (Event, error) {
 }
 
 const getEvents = `-- name: GetEvents :many
-SELECT id, name, description, start_time, end_time FROM events
+SELECT id, name, description, recurrence, start_time, end_time FROM events
 WHERE ?1 <= start_time AND start_time <= ?2
 ORDER BY start_time
 `
@@ -125,6 +137,7 @@ func (q *Queries) GetEvents(ctx context.Context, arg GetEventsParams) ([]Event, 
 			&i.ID,
 			&i.Name,
 			&i.Description,
+			&i.Recurrence,
 			&i.StartTime,
 			&i.EndTime,
 		); err != nil {
@@ -147,17 +160,19 @@ UPDATE events
     name = coalesce(?1, name),
     description = coalesce(?2, description),
     start_time = coalesce(?3, start_time),
-    end_time = coalesce(?4, end_time)
-WHERE id = ?5
-RETURNING id, name, description, start_time, end_time
+    end_time = coalesce(?4, end_time),
+    recurrence = coalesce(?5, recurrence)
+WHERE id = ?6
+RETURNING id, name, description, recurrence, start_time, end_time
 `
 
 type UpdateEventParams struct {
-	Name        sql.NullString `json:"name"`
-	Description sql.NullString `json:"description"`
-	StartTime   sql.NullInt64  `json:"start_time"`
-	EndTime     sql.NullInt64  `json:"end_time"`
-	ID          int64          `json:"id"`
+	Name        sql.NullString   `json:"name"`
+	Description sql.NullString   `json:"description"`
+	StartTime   sql.NullInt64    `json:"start_time"`
+	EndTime     sql.NullInt64    `json:"end_time"`
+	Recurrence  *recurrence.Rule `json:"recurrence"`
+	ID          int64            `json:"id"`
 }
 
 func (q *Queries) UpdateEvent(ctx context.Context, arg UpdateEventParams) (Event, error) {
@@ -166,6 +181,7 @@ func (q *Queries) UpdateEvent(ctx context.Context, arg UpdateEventParams) (Event
 		arg.Description,
 		arg.StartTime,
 		arg.EndTime,
+		arg.Recurrence,
 		arg.ID,
 	)
 	var i Event
@@ -173,6 +189,7 @@ func (q *Queries) UpdateEvent(ctx context.Context, arg UpdateEventParams) (Event
 		&i.ID,
 		&i.Name,
 		&i.Description,
+		&i.Recurrence,
 		&i.StartTime,
 		&i.EndTime,
 	)

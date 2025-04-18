@@ -9,4 +9,9 @@ sql:
         emit_empty_slices: true
         emit_json_tags: true
         emit_enum_valid_method: true
-
+        overrides:
+          - column: "events.recurrence"
+            go_type:
+              type: "Rule"
+              import: "github.com/ohhfishal/schedule/lib/recurrence"
+              pointer: true 

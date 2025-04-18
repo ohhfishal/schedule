@@ -1,0 +1,9 @@
+# {{ .Date }}
+
+{{- if .Events | not }} 
+No events for today :(
+{{- else }}
+{{range $event := .Events -}} 
+  {{ $event | Markdown -}} 
+{{- end -}}
+{{- end}}

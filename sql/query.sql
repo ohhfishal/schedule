@@ -2,9 +2,10 @@
 INSERT INTO events (
   name,
   description,
-  start_time
+  start_time,
+  recurrence
 ) VALUES (
-  ?, ?, ?
+  ?, ?, ?, ?
 )
 RETURNING *;
 
@@ -14,7 +15,8 @@ UPDATE events
     name = coalesce(sqlc.narg('name'), name),
     description = coalesce(sqlc.narg('description'), description),
     start_time = coalesce(sqlc.narg('start_time'), start_time),
-    end_time = coalesce(sqlc.narg('end_time'), end_time)
+    end_time = coalesce(sqlc.narg('end_time'), end_time),
+    recurrence = coalesce(sqlc.narg('recurrence'), recurrence)
 WHERE id = sqlc.arg('id')
 RETURNING *;
 
