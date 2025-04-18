@@ -169,6 +169,117 @@ func TestByMonthDay(t *testing.T) {
 	}
 }
 
+func TestByDay(t *testing.T) {
+	tests := []struct {
+		Name       string
+		Days       []recurrence.ByDay
+		BuildFails bool
+		Matches    []time.Time
+		NoMatches  []time.Time
+	}{
+		{
+			Name:       `empty input`,
+			BuildFails: true,
+		},
+		{
+			Name: `valid usecase (no ints)`,
+			Days: []recurrence.ByDay{
+				{Day: recurrence.SUNDAY},
+				{Day: recurrence.TUESDAY},
+				{Day: recurrence.WEDNESDAY},
+			},
+			Matches: []time.Time{
+				time.Date(2025, time.January, 5, 0, 0, 0, 0, now.Location()),
+				time.Date(2025, time.January, 7, 0, 0, 0, 0, now.Location()),
+				time.Date(2025, time.January, 8, 0, 0, 0, 0, now.Location()),
+			},
+			NoMatches: []time.Time{
+				time.Date(2025, time.January, 3, 0, 0, 0, 0, now.Location()),
+				time.Date(2025, time.January, 4, 0, 0, 0, 0, now.Location()),
+				time.Date(2025, time.January, 9, 0, 0, 0, 0, now.Location()),
+			},
+		},
+	}
+	for _, test := range tests {
+		t.Run(test.Name, func(t *testing.T) {
+			matcher, err := recurrence.NewByDay(test.Days)
+			if test.BuildFails {
+				assert.Error(t, err, `expected build to fail`)
+				return
+			}
+			assert.NoError(t, err, `expected build to succeed`)
+
+			for _, match := range test.Matches {
+				err := matcher(match)
+				assert.NoError(t, err, `expected %v to match`, match)
+			}
+
+			for _, noMatch := range test.NoMatches {
+				err := matcher(noMatch)
+				assert.Error(t, err, `expected %v to not match`, noMatch)
+			}
+		})
+	}
+}
+
+func TestByYearDay(t *testing.T) {
+	tests := []struct {
+		Name       string
+		Days       []int
+		BuildFails bool
+		Matches    []time.Time
+		NoMatches  []time.Time
+	}{
+		{
+			Name:       `empty input`,
+			Days:       []int{},
+			BuildFails: true,
+		},
+		{
+			Name:       `invalid input fails build`,
+			Days:       []int{-1},
+			BuildFails: true,
+		},
+		{
+			Name: `valid examples`,
+			Days: []int{1, 31, 62, 365},
+			Matches: []time.Time{
+				time.Date(now.Year(), time.January, 1, 0, 0, 0, 0, now.Location()),
+				time.Date(now.Year(), time.January, 31, 0, 0, 0, 0, now.Location()),
+				time.Date(now.Year(), time.January, 62, 0, 0, 0, 0, now.Location()),
+				time.Date(now.Year(), time.January, 365, 0, 0, 0, 0, now.Location()),
+			},
+			NoMatches: []time.Time{
+				time.Date(now.Year(), time.January, 2, 0, 0, 0, 0, now.Location()),
+				time.Date(now.Year(), time.March, 4, 0, 0, 0, 0, now.Location()),
+				time.Date(now.Year(), time.April, 6, 0, 0, 0, 0, now.Location()),
+				time.Date(now.Year(), time.May, 8, 0, 0, 0, 0, now.Location()),
+				time.Date(now.Year(), time.December, 10, 0, 0, 0, 0, now.Location()),
+			},
+		},
+	}
+	for _, test := range tests {
+		t.Run(test.Name, func(t *testing.T) {
+			matcher, err := recurrence.NewByYearDay(test.Days)
+			if test.BuildFails {
+				assert.Error(t, err, `expected build to fail`)
+				return
+			}
+			assert.NoError(t, err, `expected build to succeed`)
+
+			for _, match := range test.Matches {
+				err := matcher(match)
+				assert.NoError(t, err, `expected %v to match`, match)
+			}
+
+			for _, noMatch := range test.NoMatches {
+				err := matcher(noMatch)
+				assert.Error(t, err, `expected %v to not match`, noMatch)
+			}
+		})
+	}
+}
+
 func TestByHour(t *testing.T) {
 	tests := []struct {
 		Name       string

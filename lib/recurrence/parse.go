@@ -50,7 +50,7 @@ type parameter struct {
 	Interval   *int       `parser:"| ('INTERVAL' '=' @Int)"`
 	WeekStart  *WeekDay   `parser:"| ('WKST' '=' @Day)"`
 	BySetPos   *int       `parser:"| ('BYSETPOS' '=' @Int)"`
-	ByYearDay  *int       `parser:"| ('BYYEARDAY' '=' @Int (',' @Int)*)"`
+	ByYearDay  *[]int     `parser:"| ('BYYEARDAY' '=' @Int (',' @Int)*)"`
 	ByMonthDay *[]int     `parser:"| ('BYMONTHDAY' '=' @Int (',' @Int)*)"`
 	ByWeekNo   *int       `parser:"| ('BYWEEKNO' '=' @Int)"` // TODO: Make a list?
 	ByHour     *[]int     `parser:"| ('BYHOUR' '=' @Int (',' @Int)*)"`
@@ -104,7 +104,7 @@ func (p parameter) Apply(rule *Rule) error {
 	case p.ByWeekNo != nil:
 		// TODO: Connect these to the correct matchers when implemented
 	case p.ByYearDay != nil:
-		// TODO: Connect these to the correct matchers when implemented
+		matcher, err = NewByYearDay(*p.ByYearDay)
 	case p.ByDay != nil:
 		matcher, err = NewByDay(*p.ByDay)
 	case p.ByHour != nil:

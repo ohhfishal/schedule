@@ -15,8 +15,8 @@ type Match func(time.Time) error
 // [X] BYMINUTE
 // [X] BYMONTH
 // [X] BYMONTHDAY
-// [ ] BYDAY
-// [ ] BYYEARDAY
+// [X] BYDAY
+// [X] BYYEARDAY
 // --- Harder ones
 // [ ] BYSETPOS ByFilter = 1 << iota
 // [ ] BYWEEKNO
@@ -78,6 +78,29 @@ func NewByMonth(initial []int) (Match, error) {
 		month := date.Month()
 		if !slices.Contains(months, month) {
 			return fmt.Errorf(`BYMONTH: month %d not included in %v`, month, months)
+		}
+		return nil
+	}), nil
+}
+
+func NewByYearDay(initial []int) (Match, error) {
+	if len(initial) == 0 {
+		return nil, errors.New(`must include at least one hour to match`)
+	}
+
+	days := []int{}
+	for _, day := range initial {
+		// TODO: Leap year?
+		if day < 1 || day > 365 {
+			return nil, fmt.Errorf(`invalid year day: %d`, day)
+		}
+		days = append(days, day)
+	}
+
+	return Match(func(date time.Time) error {
+		day := date.YearDay()
+		if !slices.Contains(days, day) {
+			return fmt.Errorf(`BYMONTH: day %d not included in %v`, day, days)
 		}
 		return nil
 	}), nil
