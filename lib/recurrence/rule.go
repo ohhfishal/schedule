@@ -14,6 +14,8 @@ const NONE = -1
 const DAY = time.Hour * 24
 const WEEK = DAY * 7
 
+// TODO: Add Include and Exclude fields ([]time.Time)
+// Include add new ones not covered by the rule and exclude removes others
 type Rule struct {
 	Count     int          // Default NONE
 	Frequency Frequency    // Required
@@ -62,7 +64,6 @@ func (r Rule) Iter(start time.Time) (iter.Seq[time.Time], error) {
 		Start: start,
 	}
 	return iter.Seq[time.Time](func(yield func(time.Time) bool) {
-		// TODO: This assumes it is the right one...
 		for {
 			next, err := iterator.Next()
 			if err != nil {

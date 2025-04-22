@@ -77,7 +77,11 @@ func (p parameter) Apply(rule *Rule) error {
 	var err error
 	switch {
 	case p.Count != nil:
-		rule.Count = *p.Count
+		count := *p.Count
+		if count <= 0 {
+			return fmt.Errorf(`invalid count: %d (Must be a positive integer)`, count)
+		}
+		rule.Count = count
 		return nil
 	case p.Freq != nil:
 		rule.Frequency = *p.Freq
@@ -99,22 +103,23 @@ func (p parameter) Apply(rule *Rule) error {
 		}
 		rule.Until = until
 		return nil
-	case p.BySetPos != nil:
-		// TODO: Connect these to the correct matchers when implemented
+		// NOTE: These are in the order they are applied to time slices
+	case p.ByMonth != nil:
+		matcher, err = NewByMonth(*p.ByMonth)
 	case p.ByWeekNo != nil:
 		// TODO: Connect these to the correct matchers when implemented
 	case p.ByYearDay != nil:
 		matcher, err = NewByYearDay(*p.ByYearDay)
+	case p.ByMonthDay != nil:
+		matcher, err = NewByMonthDay(*p.ByMonthDay)
 	case p.ByDay != nil:
 		matcher, err = NewByDay(*p.ByDay)
 	case p.ByHour != nil:
 		matcher, err = NewByHour(*p.ByHour)
-	case p.ByMonth != nil:
-		matcher, err = NewByMonth(*p.ByMonth)
 	case p.ByMinute != nil:
 		matcher, err = NewByMinute(*p.ByMinute)
-	case p.ByMonthDay != nil:
-		matcher, err = NewByMonthDay(*p.ByMonthDay)
+	case p.BySetPos != nil:
+		// TODO: Connect these to the correct matchers when implemented
 	default:
 		return errors.New(`no parameter set`)
 	}

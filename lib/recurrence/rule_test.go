@@ -50,6 +50,11 @@ func TestFull(t *testing.T) {
 			time.Date(2006, time.January, 4, 0, 0, 0, 0, now.Location()),
 			time.Date(2006, time.January, 5, 0, 0, 0, 0, now.Location()),
 		}, Terminates: true},
+		{RRule: "RRULE:FREQ=WEEKLY;COUNT=3;BYDAY=MO,WE,TH", Times: []time.Time{
+			time.Date(2006, time.January, 2, 0, 0, 0, 0, now.Location()),
+			time.Date(2006, time.January, 4, 0, 0, 0, 0, now.Location()),
+			time.Date(2006, time.January, 5, 0, 0, 0, 0, now.Location()),
+		}, Terminates: true},
 	}
 
 	for i, test := range tests {

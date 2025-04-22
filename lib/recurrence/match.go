@@ -10,6 +10,22 @@ import (
 
 type Match func(time.Time) error
 
+// NOTE: Currently the ByMatches are incorrect
+// NOTE: START IS ALWAYS AN OCCURENCE
+// They take a single time and return whether they match or not.
+// Instead we should be taking time slices and extracting the parts that match
+// FREQ=DAILY;ByHour=1,3,5
+// Means 1, 3, 5AM everyday
+// FREQ=MINUTELY;BYHOUR=1,3,5 means every minute where the hour is 1/3/5am
+// When FREQ=HOUR -> Select the hours 1:00, 3:00, 5:00
+// When FREQ=MINUTE/SECOND -> Drop those that don't have the matching hour
+
+// TODO: Apply all the ByDay...
+// See: https://icalendar.org/iCalendar-RFC-5545/3-3-10-recurrence-rule.html
+// NOTES:
+// If multiple BYxxx rule parts are specified, then after evaluating the specified FREQ and INTERVAL rule parts, the BYxxx rule parts are applied to the current set of evaluated occurrences in the following order: BYMONTH, BYWEEKNO, BYYEARDAY, BYMONTHDAY, BYDAY, BYHOUR, BYMINUTE, BYSECOND and BYSETPOS; then COUNT and UNTIL are evaluated.
+// The order of operations is here since they cut time into slices
+
 // One for each
 // [X] BYHOUR
 // [X] BYMINUTE
@@ -17,6 +33,7 @@ type Match func(time.Time) error
 // [X] BYMONTHDAY
 // [X] BYDAY
 // [X] BYYEARDAY
+
 // --- Harder ones
 // [ ] BYSETPOS ByFilter = 1 << iota
 // [ ] BYWEEKNO
