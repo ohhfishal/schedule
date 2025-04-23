@@ -20,6 +20,28 @@ type Match func(time.Time) error
 // When FREQ=HOUR -> Select the hours 1:00, 3:00, 5:00
 // When FREQ=MINUTE/SECOND -> Drop those that don't have the matching hour
 
+// +----------+--------+--------+-------+-------+------+-------+------+
+// |          |SECONDLY|MINUTELY|HOURLY |DAILY  |WEEKLY|MONTHLY|YEARLY|
+// +----------+--------+--------+-------+-------+------+-------+------+
+// |BYMONTH   |Limit   |Limit   |Limit  |Limit  |Limit |Limit  |Expand|
+// +----------+--------+--------+-------+-------+------+-------+------+
+// |BYWEEKNO  |N/A     |N/A     |N/A    |N/A    |N/A   |N/A    |Expand|
+// +----------+--------+--------+-------+-------+------+-------+------+
+// |BYYEARDAY |Limit   |Limit   |Limit  |N/A    |N/A   |N/A    |Expand|
+// +----------+--------+--------+-------+-------+------+-------+------+
+// |BYMONTHDAY|Limit   |Limit   |Limit  |Limit  |N/A   |Expand |Expand|
+// +----------+--------+--------+-------+-------+------+-------+------+
+// |BYDAY     |Limit   |Limit   |Limit  |Limit  |Expand|Note 1 |Note 2|
+// +----------+--------+--------+-------+-------+------+-------+------+
+// |BYHOUR    |Limit   |Limit   |Limit  |Expand |Expand|Expand |Expand|
+// +----------+--------+--------+-------+-------+------+-------+------+
+// |BYMINUTE  |Limit   |Limit   |Expand |Expand |Expand|Expand |Expand|
+// +----------+--------+--------+-------+-------+------+-------+------+
+// |BYSECOND  |Limit   |Expand  |Expand |Expand |Expand|Expand |Expand|
+// +----------+--------+--------+-------+-------+------+-------+------+
+// |BYSETPOS  |Limit   |Limit   |Limit  |Limit  |Limit |Limit  |Limit |
+// +----------+--------+--------+-------+-------+------+-------+------
+
 // TODO: Apply all the ByDay...
 // See: https://icalendar.org/iCalendar-RFC-5545/3-3-10-recurrence-rule.html
 // NOTES:
