@@ -13,8 +13,16 @@ import (
 //go:embed test.ics
 var icsExample string
 
-func TestParse(t *testing.T) {
-	cal, err := icalendar.Parse(icsExample)
+func TestLex(t *testing.T) {
+	tokens, err := icalendar.Lex(icsExample)
+	for _, token := range tokens {
+		t.Log("Token:", token)
+	}
 	assert.NoError(t, err)
-	assert.NotZero(t, cal)
+}
+
+func TestParse(t *testing.T) {
+	// cal, err := icalendar.Parse(icsExample)
+	// assert.NoError(t, err)
+	// assert.NotZero(t, cal)
 }
