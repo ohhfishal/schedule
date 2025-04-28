@@ -1,0 +1,177 @@
+openapi: 3.0.4
+info:
+  title: Schedule API
+  description: Example description
+  version: 0.3.0
+
+servers:
+  - url: http://api.example.com/api
+    description: Optional server description, e.g. Main (production) server
+  - url: http://staging-api.example.com
+    description: Optional server description, e.g. Internal staging server for testing
+
+paths:
+  /dev/user/{username}:
+    post:
+      summary: Create a new user
+      description: Optional extended description in CommonMark or HTML.
+      operationId: putUserByUsername
+      tags:
+        - user
+      parameters:
+        - name: username
+          in: path
+          description: username
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: A JSON object of the user
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+    get:
+      summary: Get information on an user
+      description: Optional extended description in CommonMark or HTML.
+      operationId: getUserByUsername
+      tags:
+        - user
+      parameters:
+        - name: username
+          in: path
+          description: username
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: A JSON object of the user
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+  /dev/event/{userId}:
+    post:
+      summary: Create a new event
+      description: Optional extended description in CommonMark or HTML.
+      operationId: createEvent
+      tags:
+        - event
+      parameters:
+        - name: userId
+          in: path
+          description: ID for a given user
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        description: "Information on making an event"
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Event"
+      responses:
+        "200":
+          description: A JSON object of the user
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Event'
+    get:
+      summary: Get events with optional filters
+      description: Optional extended description in CommonMark or HTML.
+      operationId: getEvents
+      tags:
+        - event
+      parameters:
+        - name: userId
+          in: path
+          description: ID for a given user
+          required: true
+          schema:
+            type: integer
+        - name: test
+          in: query
+          description: Test query parameter
+          schema:
+            type: string
+      responses:
+        "200":
+          description: A JSON object of the user
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Event'
+  /dev/event/{userId}/{eventId}:
+    get:
+      summary: Get information on an event
+      description: Optional extended description in CommonMark or HTML.
+      operationId: getEventById
+      tags:
+        - event
+      parameters:
+        - name: userId
+          in: path
+          description: ID for a given user
+          required: true
+          schema:
+            type: integer
+        - name: eventId
+          in: path
+          description: ID for a given event
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: A JSON object of the user
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Event'
+components:
+  schemas:
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          format: integer
+          description: Unique identifier for the user
+          example: 42
+          readonly: true
+        username:
+          type: string
+          description: Unique (for now)
+          example: username
+        createdAt:
+          type: string
+          format: date-time
+          description: Timestamp when the user was created
+          readonly: true
+      required:
+        - id
+        - username
+        - createdAt
+    Event:
+      type: object
+      properties:
+        id:
+          type: string
+          format: integer
+          description: Unique identifier for the user
+          example: 1
+          readonly: true
+        createdAt:
+          type: string
+          format: date-time
+          description: Timestamp when the user was created
+          readonly: true
+      required:
+        - id
+        - createdAt
