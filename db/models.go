@@ -16,3 +16,8 @@ type Event struct {
 	StartTime   int64            `json:"start_time"`
 	EndTime     int64            `json:"end_time"`
 }
+
+type User struct {
+	ID       int64  `json:"id"`
+	Username string `json:"username"`
+}

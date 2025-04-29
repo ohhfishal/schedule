@@ -1,3 +1,14 @@
+-- name: CreateUser :one
+INSERT INTO users (
+  username
+) VALUES (
+  ?
+) RETURNING *;
+
+-- name: GetUserByUsername :one
+SELECT * FROM users
+WHERE username = ? LIMIT 1;
+
 -- name: CreateEvent :one
 INSERT INTO events (
   name,

@@ -5,6 +5,7 @@ import (
 	_ "embed"
 	"fmt"
 	"io"
+	"log/slog"
 	"time"
 
 	"github.com/alecthomas/kong"
@@ -13,13 +14,15 @@ import (
 )
 
 type Root struct {
-	Driver     string  `default:"sqlite" env:"DRIVER" help:"Driver to use as for backed"`
-	DataSource string  `default:"schedule.db" env:"DATA_SOURCE" help:"Connection string for driver"`
-	Verbose    bool    `short:"v" help:"Print more information to screen."`
-	New        New     `cmd:"" help:"Create a new event."`
-	Get        get.CMD `cmd:"" help:"Get events"`
-	Delete     Delete  `cmd:"" help:"Delete events by ID"`
-	Edit       Edit    `cmd:"" help:"Edit an event by ID"`
+	Driver     string        `default:"sqlite" env:"DRIVER" help:"Driver to use as for backed"`
+	DataSource string        `default:"schedule.db" env:"DATA_SOURCE" help:"Connection string for driver"`
+	Timeout    time.Duration `default:"0s" help:"Max time to stay alive (0s = never timeout)"`
+	Verbose    bool          `short:"v" help:"Print more information to screen."`
+	New        New           `cmd:"" help:"Create a new event."`
+	Get        get.CMD       `cmd:"" help:"Get events"`
+	Delete     Delete        `cmd:"" help:"Delete events by ID"`
+	Edit       Edit          `cmd:"" help:"Edit an event by ID"`
+	Server     Server        `cmd:"" help:"Run as an HTTP server"`
 }
 
 func Run(ctx context.Context, stdout io.Writer, args []string) error {
@@ -27,8 +30,8 @@ func Run(ctx context.Context, stdout io.Writer, args []string) error {
 	parser, err := kong.New(
 		&root,
 		kong.Bind(time.Now),
-		kong.BindTo(ctx, new(context.Context)),
 		kong.Bind(time.Now().Location()),
+		// kong.BindTo(ctx, new(context.Context)),
 		kong.BindTo(stdout, new(io.Writer)),
 	)
 	if err != nil {
@@ -41,15 +44,31 @@ func Run(ctx context.Context, stdout io.Writer, args []string) error {
 	if err != nil {
 		return fmt.Errorf(`parsing args: %w`, err)
 	}
-	parsed.Bind(root.Verbose)
+
+	// TODO: Customize
+	logger := NewLogger(stdout, slog.LevelDebug)
+	var cancel context.CancelFunc
+	if root.Timeout.Nanoseconds() > 0 {
+		logger.Debug(`adding timeout`, `timeout`, root.Timeout)
+		ctx, cancel = context.WithTimeout(ctx, root.Timeout)
+		defer cancel()
+	}
 
 	queries, err := db.Connect(ctx, root.Driver, root.DataSource)
 	if err != nil {
 		return err
 	}
 
-	if err := parsed.Run(ctx, queries); err != nil {
+	parsed.Bind(root.Verbose)
+	parsed.BindTo(ctx, new(context.Context))
+	if err := parsed.Run(ctx, logger, queries); err != nil {
 		return err
 	}
 	return nil
+}
+func NewLogger(w io.Writer, level slog.Level) *slog.Logger {
+	handler := slog.NewJSONHandler(w, &slog.HandlerOptions{
+		Level: level,
+	})
+	return slog.New(handler)
 }

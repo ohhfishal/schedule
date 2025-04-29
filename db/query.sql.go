@@ -50,6 +50,21 @@ func (q *Queries) CreateEvent(ctx context.Context, arg CreateEventParams) (Event
 	return i, err
 }
 
+const createUser = `-- name: CreateUser :one
+INSERT INTO users (
+  username
+) VALUES (
+  ?
+) RETURNING id, username
+`
+
+func (q *Queries) CreateUser(ctx context.Context, username string) (User, error) {
+	row := q.db.QueryRowContext(ctx, createUser, username)
+	var i User
+	err := row.Scan(&i.ID, &i.Username)
+	return i, err
+}
+
 const deleteEvent = `-- name: DeleteEvent :execresult
 DELETE FROM events
 WHERE id = ?
@@ -152,6 +167,18 @@ func (q *Queries) GetEvents(ctx context.Context, arg GetEventsParams) ([]Event, 
 		return nil, err
 	}
 	return items, nil
+}
+
+const getUserByUsername = `-- name: GetUserByUsername :one
+SELECT id, username FROM users
+WHERE username = ? LIMIT 1
+`
+
+func (q *Queries) GetUserByUsername(ctx context.Context, username string) (User, error) {
+	row := q.db.QueryRowContext(ctx, getUserByUsername, username)
+	var i User
+	err := row.Scan(&i.ID, &i.Username)
+	return i, err
 }
 
 const updateEvent = `-- name: UpdateEvent :one

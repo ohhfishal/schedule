@@ -10,3 +10,9 @@ CREATE TABLE IF NOT EXISTS events (
   start_time INTEGER NOT NULL,
   end_time INTEGER NOT NULL DEFAULT 0
 );
+
+CREATE TABLE IF NOT EXISTS users (
+  -- PRIMARY KEY (source/user, ID)
+  id   INTEGER PRIMARY KEY,
+  username TEXT NOT NULL UNIQUE
+);
