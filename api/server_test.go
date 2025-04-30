@@ -1,4 +1,4 @@
-package server_test
+package api_test
 
 import (
 	"context"
@@ -7,7 +7,7 @@ import (
 	"testing"
 
 	assert "github.com/alecthomas/assert/v2"
-	"github.com/ohhfishal/schedule/cmd/server"
+	"github.com/ohhfishal/schedule/api"
 	"github.com/ohhfishal/schedule/db"
 )
 
@@ -38,15 +38,18 @@ func TestResponses(t *testing.T) {
 	logger := NewLogger(nil)
 	for _, test := range tests {
 		t.Run(test.Name, func(t *testing.T) {
-			// TODO: Make configurable
-			s := server.Server{"localhost:8080"}
+			db := DB(t)
+			s := api.Server{
+				Logger:   logger,
+				Database: db,
+			}
 
 			ctx, cancel := context.WithCancel(t.Context())
 			defer cancel()
 
-			db := DB(t)
 			go func() {
-				err := s.Run(ctx, logger, db)
+				// TODO: Make configurable
+				err := s.Run(ctx, "localhost:8080")
 				assert.NoError(t, err)
 			}()
 

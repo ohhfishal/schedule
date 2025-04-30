@@ -29,6 +29,32 @@ func NewServer(logger *slog.Logger, database Database) Server {
 	}
 }
 
+func (server *Server) Run(ctx context.Context, addr string) error {
+	router := http.NewServeMux()
+	handler := HandlerFromMux(server, router)
+	s := &http.Server{
+		Handler: handler,
+		Addr:    addr,
+	}
+	go func() {
+		server.Logger.Info(`starting server`, `addr`, addr)
+		if err := s.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+			server.Logger.Error(`server died due to error`, `error`, err)
+		}
+	}()
+
+	server.Logger.Info(`main goroutine sleeping`)
+	<-ctx.Done()
+
+	err := ctx.Err()
+	server.Logger.Info(`context ended`, `error`, err)
+
+	if err := s.Shutdown(context.TODO()); err != nil {
+		return fmt.Errorf(`shutting down: %w`, err)
+	}
+	return nil
+}
+
 // /api/.../event
 
 func (server Server) createEvent(ctx context.Context, userId int, event Event) http.Handler {
