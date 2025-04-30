@@ -1,5 +1,10 @@
 
 # Change Log
+
+## [upcoming] 2025-XX-XX
+### Added
+- `server` command to run as an HTTP server
+- `openapi.yaml` specification
  
 ## [v0.3.0] 2025-04-18
 ### Added

@@ -15,11 +15,26 @@ import (
 
 // Event defines model for Event.
 type Event struct {
+	// AllDay When true, runcates the time of day for all timestamps.
+	AllDay bool `json:"allDay,omitempty"`
+
 	// CreatedAt Timestamp when the user was created
-	CreatedAt *time.Time `json:"createdAt,omitempty"`
+	CreatedAt time.Time `json:"createdAt,omitempty"`
+
+	// Description Description of the event
+	Description string `json:"description,omitempty"`
+
+	// EndTime Time the event ends
+	EndTime time.Time `json:"endTime,omitempty"`
 
 	// Id Unique identifier for the user
-	Id *string `json:"id,omitempty"`
+	Id int `json:"id,omitempty"`
+
+	// Name User-Facing name for the event
+	Name string `json:"name"`
+
+	// StartTime Time the event starts
+	StartTime time.Time `json:"startTime"`
 }
 
 // User defines model for User.

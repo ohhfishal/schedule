@@ -3,7 +3,9 @@ package api
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
+	"io"
 	"log/slog"
 	"net/http"
 
@@ -29,15 +31,15 @@ func NewServer(logger *slog.Logger, database Database) Server {
 
 // /api/.../event
 
-func (server Server) getEvents(ctx context.Context, userId int, params GetEventsParams) http.Handler {
-	return nil
-}
-
-func (server Server) createEvent(ctx context.Context, userId int) http.Handler {
+func (server Server) createEvent(ctx context.Context, userId int, event Event) http.Handler {
 	return nil
 }
 
 func (server Server) getEvent(ctx context.Context, userId int, eventId int) http.Handler {
+	return nil
+}
+
+func (server Server) getEvents(ctx context.Context, userId int, params GetEventsParams) http.Handler {
 	return nil
 }
 
@@ -86,6 +88,19 @@ func Error(status int, err error) http.Handler {
 	})
 }
 
+func decode[T any](r *http.Request) (T, error) {
+	var v T
+	err := json.NewDecoder(r.Body).Decode(&v)
+	if errors.Is(err, io.EOF) {
+		return v, errors.New("body is empty or incomplete")
+	}
+
+	if err != nil {
+		return v, fmt.Errorf("decode json: %w", err)
+	}
+	return v, nil
+}
+
 // ServerInterface bindings
 
 // (GET /dev/event/{userId})
@@ -96,7 +111,12 @@ func (server Server) GetEvents(w http.ResponseWriter, r *http.Request, userId in
 
 // (POST /dev/event/{userId})
 func (server Server) CreateEvent(w http.ResponseWriter, r *http.Request, userId int) {
-	handler := server.createEvent(r.Context(), userId)
+	event, err := decode[Event](r)
+	if err != nil {
+		Error(400, err).ServeHTTP(w, r)
+		return
+	}
+	handler := server.createEvent(r.Context(), userId, event)
 	handler.ServeHTTP(w, r)
 }
 

@@ -4,3 +4,5 @@ generate:
   std-http-server: true
   models: true
 output: api/api.gen.go
+output-options:
+  nullable-type: true

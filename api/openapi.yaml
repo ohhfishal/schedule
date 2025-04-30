@@ -145,15 +145,18 @@ components:
           description: Unique identifier for the user
           example: 42
           readonly: true
+          x-go-type-skip-optional-pointer: true
         username:
           type: string
           description: Unique (for now)
           example: username
+          x-go-type-skip-optional-pointer: true
         createdAt:
           type: string
           format: date-time
           description: Timestamp when the user was created
           readonly: true
+          x-go-type-skip-optional-pointer: true
       required:
         - id
         - username
@@ -162,16 +165,43 @@ components:
       type: object
       properties:
         id:
-          type: string
+          type: integer
           format: integer
           description: Unique identifier for the user
           example: 1
-          readonly: true
+          readOnly: true
+          x-go-type-skip-optional-pointer: true
+        name:
+          type: string
+          description: User-Facing name for the event
+          example: "Standup Meeting"
+        description:
+          type: string
+          description: Description of the event
+          example: "Meet with the team to discuss progress and potential blockers"
+          default: ""
+          x-go-type-skip-optional-pointer: true
+        allDay:
+          type: boolean
+          description: When true, runcates the time of day for all timestamps.
+          default: false
+          x-go-type-skip-optional-pointer: true
+        startTime:
+          type: string
+          format: date-time
+          description: Time the event starts
+        endTime:
+          type: string
+          format: date-time
+          description: Time the event ends
+          x-go-type-skip-optional-pointer: true
         createdAt:
           type: string
           format: date-time
           description: Timestamp when the user was created
-          readonly: true
+          readOnly: true
+          x-go-type-skip-optional-pointer: true
       required:
         - id
-        - createdAt
+        - startTime
+        - name
