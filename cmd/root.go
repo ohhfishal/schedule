@@ -10,6 +10,7 @@ import (
 
 	"github.com/alecthomas/kong"
 	"github.com/ohhfishal/schedule/cmd/get"
+	"github.com/ohhfishal/schedule/cmd/server"
 	"github.com/ohhfishal/schedule/db"
 )
 
@@ -22,7 +23,7 @@ type Root struct {
 	Get        get.CMD       `cmd:"" help:"Get events"`
 	Delete     Delete        `cmd:"" help:"Delete events by ID"`
 	Edit       Edit          `cmd:"" help:"Edit an event by ID"`
-	Server     Server        `cmd:"" help:"Run as an HTTP server"`
+	Server     server.Server `cmd:"" help:"Run as an HTTP server"`
 }
 
 func Run(ctx context.Context, stdout io.Writer, args []string) error {
