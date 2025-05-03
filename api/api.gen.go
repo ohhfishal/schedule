@@ -40,10 +40,10 @@ type Event struct {
 // User defines model for User.
 type User struct {
 	// CreatedAt Timestamp when the user was created
-	CreatedAt *time.Time `json:"createdAt,omitempty"`
+	CreatedAt time.Time `json:"createdAt,omitempty"`
 
 	// Id Unique identifier for the user
-	Id *string `json:"id,omitempty"`
+	Id string `json:"id,omitempty"`
 
 	// Username Unique (for now)
 	Username string `json:"username"`
@@ -61,20 +61,23 @@ type CreateEventJSONRequestBody = Event
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
 	// Get events with optional filters
-	// (GET /dev/event/{userId})
+	// (GET /api/dev/event/{userId})
 	GetEvents(w http.ResponseWriter, r *http.Request, userId int, params GetEventsParams)
 	// Create a new event
-	// (POST /dev/event/{userId})
+	// (POST /api/dev/event/{userId})
 	CreateEvent(w http.ResponseWriter, r *http.Request, userId int)
+	// Get information on an user
+	// (GET /api/dev/user/{username})
+	GetUserByUsername(w http.ResponseWriter, r *http.Request, username string)
+	// Create a new user
+	// (POST /api/dev/user/{username})
+	PutUserByUsername(w http.ResponseWriter, r *http.Request, username string)
 	// Get information on an event
 	// (GET /dev/event/{userId}/{eventId})
 	GetEventById(w http.ResponseWriter, r *http.Request, userId int, eventId int)
-	// Get information on an user
-	// (GET /dev/user/{username})
-	GetUserByUsername(w http.ResponseWriter, r *http.Request, username string)
-	// Create a new user
-	// (POST /dev/user/{username})
-	PutUserByUsername(w http.ResponseWriter, r *http.Request, username string)
+	// Check service health
+	// (GET /health)
+	Health(w http.ResponseWriter, r *http.Request)
 }
 
 // ServerInterfaceWrapper converts contexts to parameters.
@@ -147,40 +150,6 @@ func (siw *ServerInterfaceWrapper) CreateEvent(w http.ResponseWriter, r *http.Re
 	handler.ServeHTTP(w, r)
 }
 
-// GetEventById operation middleware
-func (siw *ServerInterfaceWrapper) GetEventById(w http.ResponseWriter, r *http.Request) {
-
-	var err error
-
-	// ------------- Path parameter "userId" -------------
-	var userId int
-
-	err = runtime.BindStyledParameterWithOptions("simple", "userId", r.PathValue("userId"), &userId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
-	if err != nil {
-		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "userId", Err: err})
-		return
-	}
-
-	// ------------- Path parameter "eventId" -------------
-	var eventId int
-
-	err = runtime.BindStyledParameterWithOptions("simple", "eventId", r.PathValue("eventId"), &eventId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
-	if err != nil {
-		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "eventId", Err: err})
-		return
-	}
-
-	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		siw.Handler.GetEventById(w, r, userId, eventId)
-	}))
-
-	for _, middleware := range siw.HandlerMiddlewares {
-		handler = middleware(handler)
-	}
-
-	handler.ServeHTTP(w, r)
-}
-
 // GetUserByUsername operation middleware
 func (siw *ServerInterfaceWrapper) GetUserByUsername(w http.ResponseWriter, r *http.Request) {
 
@@ -222,6 +191,54 @@ func (siw *ServerInterfaceWrapper) PutUserByUsername(w http.ResponseWriter, r *h
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.PutUserByUsername(w, r, username)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// GetEventById operation middleware
+func (siw *ServerInterfaceWrapper) GetEventById(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+
+	// ------------- Path parameter "userId" -------------
+	var userId int
+
+	err = runtime.BindStyledParameterWithOptions("simple", "userId", r.PathValue("userId"), &userId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "userId", Err: err})
+		return
+	}
+
+	// ------------- Path parameter "eventId" -------------
+	var eventId int
+
+	err = runtime.BindStyledParameterWithOptions("simple", "eventId", r.PathValue("eventId"), &eventId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "eventId", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetEventById(w, r, userId, eventId)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// Health operation middleware
+func (siw *ServerInterfaceWrapper) Health(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.Health(w, r)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -351,11 +368,12 @@ func HandlerWithOptions(si ServerInterface, options StdHTTPServerOptions) http.H
 		ErrorHandlerFunc:   options.ErrorHandlerFunc,
 	}
 
-	m.HandleFunc("GET "+options.BaseURL+"/dev/event/{userId}", wrapper.GetEvents)
-	m.HandleFunc("POST "+options.BaseURL+"/dev/event/{userId}", wrapper.CreateEvent)
+	m.HandleFunc("GET "+options.BaseURL+"/api/dev/event/{userId}", wrapper.GetEvents)
+	m.HandleFunc("POST "+options.BaseURL+"/api/dev/event/{userId}", wrapper.CreateEvent)
+	m.HandleFunc("GET "+options.BaseURL+"/api/dev/user/{username}", wrapper.GetUserByUsername)
+	m.HandleFunc("POST "+options.BaseURL+"/api/dev/user/{username}", wrapper.PutUserByUsername)
 	m.HandleFunc("GET "+options.BaseURL+"/dev/event/{userId}/{eventId}", wrapper.GetEventById)
-	m.HandleFunc("GET "+options.BaseURL+"/dev/user/{username}", wrapper.GetUserByUsername)
-	m.HandleFunc("POST "+options.BaseURL+"/dev/user/{username}", wrapper.PutUserByUsername)
+	m.HandleFunc("GET "+options.BaseURL+"/health", wrapper.Health)
 
 	return m
 }

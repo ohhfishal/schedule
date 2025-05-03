@@ -5,13 +5,33 @@ info:
   version: 0.3.0
 
 servers:
-  - url: http://api.example.com/api
+  - url: http://api.example.com
     description: Optional server description, e.g. Main (production) server
   - url: http://staging-api.example.com
     description: Optional server description, e.g. Internal staging server for testing
 
 paths:
-  /dev/user/{username}:
+  /health:
+    get:
+      summary: Check service health
+      description: Returns the health status of the service
+      operationId: health
+      responses:
+        '200':
+          description: Service is healthy
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: "OK"
+        '503':
+          description: Service is unhealthy
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: "Service Unavailable"
+  /api/dev/user/{username}:
     post:
       summary: Create a new user
       description: Optional extended description in CommonMark or HTML.
@@ -52,7 +72,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/User'
-  /dev/event/{userId}:
+  /api/dev/event/{userId}:
     post:
       summary: Create a new event
       description: Optional extended description in CommonMark or HTML.

@@ -12,6 +12,8 @@ import (
 	"github.com/ohhfishal/schedule/db"
 )
 
+var _ ServerInterface = &Server{}
+
 type Database interface {
 	CreateUser(ctx context.Context, username string) (db.User, error)
 	GetUserByUsername(ctx context.Context, username string) (db.User, error)
@@ -29,6 +31,7 @@ func NewServer(logger *slog.Logger, database Database) Server {
 	}
 }
 
+// Entry Point from CLI
 func (server *Server) Run(ctx context.Context, addr string) error {
 	router := http.NewServeMux()
 	handler := HandlerFromMux(server, router)
@@ -162,4 +165,9 @@ func (server Server) GetUserByUsername(w http.ResponseWriter, r *http.Request, u
 func (server Server) PutUserByUsername(w http.ResponseWriter, r *http.Request, username string) {
 	handler := server.putUser(r.Context(), username)
 	handler.ServeHTTP(w, r)
+}
+
+// (GET /health)
+func (server Server) Health(w http.ResponseWriter, r *http.Request) {
+	Text(200, "OK").ServeHTTP(w, r)
 }
