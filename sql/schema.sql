@@ -12,7 +12,18 @@ CREATE TABLE IF NOT EXISTS events (
 );
 
 CREATE TABLE IF NOT EXISTS users (
-  -- PRIMARY KEY (source/user, ID)
-  id   INTEGER PRIMARY KEY,
-  username TEXT NOT NULL UNIQUE
+  user_id   TEXT PRIMARY KEY,
+  username TEXT NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  last_active TIMESTAMP
+);
+
+CREATE TABLE command_logs (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id TEXT,
+    guild_id TEXT,
+    command TEXT NOT NULL,
+    executed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(user_id),
+    FOREIGN KEY (guild_id) REFERENCES guilds(guild_id)
 );
