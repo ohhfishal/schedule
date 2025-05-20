@@ -24,6 +24,5 @@ CREATE TABLE command_logs (
     guild_id TEXT,
     command TEXT NOT NULL,
     executed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES users(user_id),
-    FOREIGN KEY (guild_id) REFERENCES guilds(guild_id)
+    FOREIGN KEY (user_id) REFERENCES users(user_id)
 );
